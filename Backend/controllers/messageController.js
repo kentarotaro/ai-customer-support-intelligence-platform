@@ -72,28 +72,40 @@ const createMessage = async (req, res) => {
     // B. Kirim Respon Cepat ke Pengirim
     res.status(201).json({ 
       success: true, 
-      message: "Pesan diterima, AI sedang menganalisa...", 
+      message: "Pesan diterima. AI sedang melakukan analisis lengkap...", 
       data: message 
     });
 
-    // C. BACKGROUND PROCESS: Panggil AI
-    console.log(`🤖 Memulai analisis AI untuk pesan ID: ${message.id}...`);
+    // C. BACKGROUND PROCESS: Panggil 2 Fungsi AI Sekaligus
+    console.log(`🤖 [Start] AI sedang bekerja untuk ID: ${message.id}...`);
     
-    // Jangan pakai await di sini agar tidak memblokir respon
-    aiService.analyzeIncomingMessage(content).then(async (aiResult) => {
-      console.log(`✅ AI Selesai! Hasil: ${JSON.stringify(aiResult)}`);
+    // Jalankan Klasifikasi & Summary secara PARALEL (biar cepat)
+    Promise.all([
+      aiService.analyzeIncomingMessage(content),             // Tugas 1: Cek Sentiment/Prioritas
+      aiService.generateSummary(content, customer_name)      // Tugas 2: Bikin Rangkuman & Saran Balasan
+    ]).then(async ([analysisResult, summaryResult]) => {
       
+      console.log("✅ [Finish] AI selesai mikir!");
+
+      // Update database dengan hasil gabungan
       await supabase
         .from('messages')
         .update({
-          category: aiResult.category,
-          sentiment: aiResult.sentiment,
-          priority: aiResult.priority
+          // Hasil Analisis
+          category: analysisResult.category,
+          sentiment: analysisResult.sentiment,
+          priority: analysisResult.priority,
+          
+          // Hasil Summary & Suggestion
+          ai_summary: summaryResult.summary,
+          ai_suggested_reply: summaryResult.suggested_reply
         })
         .eq('id', message.id);
+
+      console.log(`💾 Database updated untuk ID: ${message.id}`);
         
     }).catch(err => {
-      console.error("❌ AI Error:", err);
+      console.error("❌ AI Error (Background Process):", err);
     });
 
   } catch (err) {
@@ -102,5 +114,50 @@ const createMessage = async (req, res) => {
   }
 };
 
-// Ekspor ketiga fungsi ini agar bisa dipakai di routes
-module.exports = { getMessages, getMessageDetail, createMessage };
+const replyMessage = async (req, res) => {
+  const { id } = req.params; // ID Pesan (dari URL)
+  const { reply_content } = req.body; // Isi balasan (dari Yazid/Postman)
+
+  if (!reply_content) {
+    return res.status(400).json({ error: "Isi balasan tidak boleh kosong" });
+  }
+
+  try {
+    // A. Simpan Balasan ke Tabel 'replies'
+    const { error: replyError } = await supabase
+      .from('replies')
+      .insert([{ message_id: id, reply_content }]);
+
+    if (replyError) throw replyError;
+
+    // B. Update Status Pesan jadi 'Closed' (Sesuai Flowchart)
+    const { data: updatedMessage, error: updateError } = await supabase
+      .from('messages')
+      .update({ status: 'Closed' })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+
+    // C. Kirim Sukses
+    res.json({
+      success: true,
+      message: "Pesan berhasil dibalas dan tiket ditutup.",
+      data: updatedMessage
+    });
+
+  } catch (error) {
+    console.error("❌ Error replying:", error);
+    res.status(500).json({ error: "Gagal memproses balasan" });
+  }
+};
+
+// --- UPDATE EXPORTS (PENTING!) ---
+// Pastikan replyMessage dimasukkan ke sini
+module.exports = { 
+  getMessages, 
+  getMessageDetail, 
+  createMessage, 
+  replyMessage // <--- Tambahan baru
+};

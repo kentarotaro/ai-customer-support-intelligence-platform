@@ -12,4 +12,7 @@ router.get('/:id', messageController.getMessageDetail);
 // URL: POST /api/messages
 router.post('/', messageController.createMessage); 
 
+// URL: POST /api/messages/:id/reply
+router.post('/:id/reply', messageController.replyMessage);
+
 module.exports = router;

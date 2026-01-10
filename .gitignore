@@ -1,3 +1,13 @@
 node_modules/
 backend/node_modules/
 frontend/node_modules/
+
+# Environment Variables 
+.env
+
+# OS Junk Files (Mac)
+.DS_Store
+
+# OS Junk Files (Windows)
+Thumbs.db
+Desktop.ini
