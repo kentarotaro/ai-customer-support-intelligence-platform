@@ -1,12 +1,5 @@
 // Backend/services/aiService.js
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const dotenv = require("dotenv");
-
-dotenv.config();
-
-// Inisialisasi Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+const { model } = require('../config/gemini');
 
 /**
  * FUNGSI 1: KLASIFIKASI (Jalur Cepat - Background)
