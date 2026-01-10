@@ -4,6 +4,7 @@ frontend/node_modules/
 
 # Environment Variables 
 .env
+Backend/.env
 
 # OS Junk Files (Mac)
 .DS_Store
