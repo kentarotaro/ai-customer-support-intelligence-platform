@@ -5,6 +5,10 @@ const dotenv = require('dotenv');
 
 // Import Routes
 const messageRoutes = require('./routes/messageRoutes');
+const authRoutes = require('./routes/authRoutes');
+
+// Import Middleware
+const { authLimiter, aiLimiter, generalLimiter } = require('./middleware/rateLimiter');
 
 dotenv.config();
 
@@ -15,11 +19,22 @@ const port = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
 
-// --- ROUTES ---
-// Semua request ke /api/messages akan diurus oleh messageRoutes
-app.use('/api/messages', messageRoutes);
+// ====== APPLY RATE LIMITERS ======
+// 1. Global limiter untuk semua routes (100 req/menit)
+app.use(generalLimiter);
 
-// Root Endpoint (Cek server nyala/nggak)
+// 2. Auth limiter untuk login/register (5 req/15 menit)
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+
+// 3. AI limiter untuk message creation (50 req/jam)
+app.use('/api/messages', aiLimiter);
+
+// ====== ROUTES ======
+app.use('/api/messages', messageRoutes);
+app.use('/api/auth', authRoutes);
+
+// Root Endpoint
 app.get('/', (req, res) => {
   res.send('AI Customer Support API is Running...');
 });
