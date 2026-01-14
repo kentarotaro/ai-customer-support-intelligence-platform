@@ -79,6 +79,7 @@ const getMessageDetail = async (req, res) => {
  * 3. KIRIM PESAN BARU
  */
 const createMessage = async (req, res) => {
+  // 1. Validasi Input
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ 
@@ -87,9 +88,11 @@ const createMessage = async (req, res) => {
     });
   }
 
+  // 2. VARIABEL SAMA PERSIS SEPERTI KODE LAMA
   const { content, customer_name, subject } = req.body;
 
   try {
+    // 3. Insert ke Database - STRUKTUR SAMA
     const { data: message, error } = await supabase
       .from('messages')
       .insert([{ 
@@ -103,36 +106,55 @@ const createMessage = async (req, res) => {
 
     if (error) throw error;
 
-    res.status(201).json({ 
-      success: true, 
-      message: "Pesan diterima. AI sedang melakukan analisis lengkap...", 
-      data: message 
-    });
-
+    // 4. 🤖 AI PROCESS (BLOCKING - Tunggu sampai selesai)
     console.log(`🤖 [Start] AI sedang bekerja untuk ID: ${message.id}...`);
     
-    Promise.all([
-      aiService.analyzeIncomingMessage(content),
-      aiService.generateSummary(content, customer_name)
-    ]).then(async ([analysisResult, summaryResult]) => {
+    let aiAnalysis = { category: 'General', sentiment: 'Neutral', priority: 'medium' };
+    let aiSummary = { summary: '', suggested_reply: '' };
+
+    try {
+      // Panggil AI secara PARALEL dan TUNGGU hasilnya
+      const [analysisResult, summaryResult] = await Promise.all([
+        aiService.analyzeIncomingMessage(content),
+        aiService.generateSummary(content, customer_name)
+      ]);
+
+      aiAnalysis = analysisResult;
+      aiSummary = summaryResult;
       
       console.log("✅ [Finish] AI selesai mikir!");
 
+      // Update Database dengan hasil AI - SESUAI SCHEMA KAMU
       await supabase
         .from('messages')
         .update({
-          category: analysisResult.category,
-          sentiment: analysisResult.sentiment,
-          priority: analysisResult.priority,
-          ai_summary: summaryResult.summary,
-          ai_suggested_reply: summaryResult.suggested_reply
+          category: aiAnalysis.category,
+          sentiment: aiAnalysis.sentiment,
+          priority: aiAnalysis.priority,
+          ai_summary: aiSummary.summary,
+          ai_suggested_reply: aiSummary.suggested_reply
         })
         .eq('id', message.id);
 
       console.log(`💾 Database updated untuk ID: ${message.id}`);
-        
-    }).catch(err => {
-      console.error("❌ AI Error (Background Process):", err);
+
+    } catch (aiError) {
+      console.error("❌ AI Error:", aiError.message);
+      // Jangan throw error, biarkan pesan tetap tersimpan
+    }
+
+    // 5. Response SETELAH AI selesai (dengan hasil AI)
+    res.status(201).json({ 
+      success: true, 
+      message: "Pesan berhasil disimpan dan dianalisis AI", 
+      data: {
+        ...message, // Data asli dari database
+        category: aiAnalysis.category,
+        sentiment: aiAnalysis.sentiment,
+        priority: aiAnalysis.priority,
+        ai_summary: aiSummary.summary,
+        ai_suggested_reply: aiSummary.suggested_reply
+      }
     });
 
   } catch (err) {

@@ -2,7 +2,8 @@
 const { model } = require('../config/gemini');
 
 /**
- * FUNGSI 1: KLASIFIKASI (Jalur Cepat - Background)
+ * FUNGSI 1: KLASIFIKASI PESAN
+ * Menganalisis kategori, sentiment, dan prioritas
  */
 const analyzeIncomingMessage = async (text) => {
   try {
@@ -11,7 +12,7 @@ const analyzeIncomingMessage = async (text) => {
       Return ONLY a JSON object (no markdown, no backticks) with these fields:
       - category: "Billing" | "Technical" | "General" | "Inquiry"
       - sentiment: "Positive" | "Neutral" | "Negative"
-      - priority: "High" | "Medium" | "Low" (High if user is angry or money issue)
+      - priority: "high" | "medium" | "low" (high if user is angry or money issue)
       
       Message: "${text}"
     `;
@@ -26,13 +27,17 @@ const analyzeIncomingMessage = async (text) => {
     return JSON.parse(cleanJson);
   } catch (error) {
     console.error("❌ Error AI Classification:", error);
-    // Return default jika error
-    return { category: "General", sentiment: "Neutral", priority: "Medium" };
+    return { 
+      category: "General", 
+      sentiment: "Neutral", 
+      priority: "medium" 
+    };
   }
 };
 
 /**
- * FUNGSI 2: SUMMARIZATION (Jalur Lambat - On Demand)
+ * FUNGSI 2: GENERATE SUMMARY & REPLY
+ * Membuat ringkasan dan saran balasan
  */
 const generateSummary = async (text, customerName) => {
   try {
@@ -54,8 +59,14 @@ const generateSummary = async (text, customerName) => {
     return JSON.parse(cleanJson);
   } catch (error) {
     console.error("❌ Error AI Summary:", error);
-    return { summary: "Gagal memproses ringkasan.", suggested_reply: "" };
+    return { 
+      summary: "Gagal memproses ringkasan.", 
+      suggested_reply: "" 
+    };
   }
 };
 
-module.exports = { analyzeIncomingMessage, generateSummary };
+module.exports = { 
+  analyzeIncomingMessage, 
+  generateSummary
+};
