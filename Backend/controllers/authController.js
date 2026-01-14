@@ -11,43 +11,44 @@ const register = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
+  // 1. Ambil data dari body
   const { email, password, full_name, role } = req.body;
 
   try {
-    // A. Daftarkan user ke Supabase Auth (email + password)
+    // 2. Daftarkan user ke Supabase Auth
+    // (Kirim metadata agar Trigger bisa menangkap nama & role)
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: full_name,       // PENTING: Kirim ke metadata
+          role: role || 'agent'       // PENTING: Kirim ke metadata
+        }
+      }
     });
 
     if (authError) {
-      // Handle error spesifik Supabase
       if (authError.message.includes('already registered')) {
         return res.status(409).json({ error: 'Email sudah terdaftar.' });
       }
       throw authError;
     }
 
-    // B. Simpan profil tambahan ke public.users
-    const { error: profileError } = await supabase
-      .from('users')
-      .insert([{
-        id: authData.user.id, // UUID dari auth.users
-        full_name,
-        role: role || 'agent'
-      }]);
+    // ---------------------------------------------------------
+    // ❌ STEP B DIHAPUS (KARENA SUDAH DIKERJAKAN TRIGGER)
+    // Jangan insert manual lagi ke public.users di sini
+    // ---------------------------------------------------------
 
-    if (profileError) throw profileError;
-
-    // C. Return session token dari Supabase
+    // 3. Sukses
     res.status(201).json({
       success: true,
       message: 'Registrasi berhasil! Silakan cek email untuk verifikasi.',
-      session: authData.session, // Berisi access_token & refresh_token
+      session: authData.session,
       user: {
         id: authData.user.id,
         email: authData.user.email,
-        full_name,
+        full_name: full_name, // Return langsung dari input (karena database sdg proses async)
         role: role || 'agent'
       }
     });
@@ -64,6 +65,7 @@ const register = async (req, res) => {
 /**
  * 2. LOGIN - Pakai Supabase Auth
  */
+
 const login = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -73,7 +75,6 @@ const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // A. Login via Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -86,27 +87,53 @@ const login = async (req, res) => {
       });
     }
 
-    // B. Ambil profil dari public.users
+    // ===== TAMBAHKAN LOG INI =====
+    console.log('🔍 DEBUG LOGIN:');
+    console.log('  User ID:', authData.user.id);
+    console.log('  Email:', authData.user.email);
+    console.log('  Metadata:', authData.user.user_metadata);
+
+    // Ambil profil dari public.users
     const { data: profile, error: profileError } = await supabase
       .from('users')
       .select('full_name, role')
       .eq('id', authData.user.id)
       .single();
 
-    if (profileError) {
-      console.error('⚠️ Profil tidak ditemukan, user mungkin belum register lengkap');
+    // ===== TAMBAHKAN LOG INI =====
+    console.log('📊 Profile Query Result:');
+    console.log('  Data:', profile);
+    console.log('  Error:', profileError);
+
+    // Smart fallback
+    let finalFullName = 'Unknown';
+    let finalRole = 'agent';
+
+    if (profile && profile.full_name) {
+      console.log('✅ CASE 1: Data dari public.users');
+      finalFullName = profile.full_name;
+      finalRole = profile.role;
+    } else if (authData.user.user_metadata) {
+      console.log('⚠️ CASE 2: Fallback ke metadata');
+      finalFullName = authData.user.user_metadata.full_name || 'Unknown';
+      finalRole = authData.user.user_metadata.role || 'agent';
+    } else {
+      console.log('❌ CASE 3: Tidak ada data sama sekali');
     }
 
-    // C. Return session + profil
+    console.log('📝 Final Result:');
+    console.log('  Full Name:', finalFullName);
+    console.log('  Role:', finalRole);
+
     res.json({
       success: true,
       message: 'Login berhasil!',
-      session: authData.session, // access_token ada di sini
+      session: authData.session,
       user: {
         id: authData.user.id,
         email: authData.user.email,
-        full_name: profile?.full_name || 'Unknown',
-        role: profile?.role || 'agent'
+        full_name: finalFullName,
+        role: finalRole
       }
     });
 
