@@ -164,34 +164,50 @@ const createMessage = async (req, res) => {
 };
 
 /**
- * 4. ASSIGN TICKET
+ * 4. ASSIGN TICKET (Improved & Production-Ready)
  */
 const assignTicket = async (req, res) => {
-  const { id } = req.params;
-  const { agent_id } = req.body;
+  const { id } = req.params; // Message ID dari URL
+  const { agent_id } = req.body; // Agent ID dari body (optional untuk agent)
+  
+  // Data user dari JWT token (sudah di-set oleh middleware)
   const userRole = req.user.role;
   const userId = req.user.id;
 
   try {
+    // message existence check
     const { data: message, error: fetchError } = await supabase
       .from('messages')
-      .select('id, assigned_to, status')
+      .select('id, assigned_to, status, customer_name')
       .eq('id', id)
       .single();
 
-    if (fetchError || !message) {
-      return res.status(404).json({ error: 'Pesan tidak ditemukan' });
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        return res.status(404).json({ 
+          error: 'Pesan tidak ditemukan',
+          code: 'MESSAGE_NOT_FOUND'
+        });
+      }
+      throw fetchError;
     }
 
+    // role based assignment logic
     let targetAgentId;
+    let assignmentType; // 'lead_assign' atau 'agent_claim'
 
     if (userRole === 'lead') {
+      // ---- CASE 1: LEAD ASSIGN ----
+      // Lead WAJIB kirim agent_id
       if (!agent_id) {
         return res.status(400).json({ 
-          error: 'agent_id wajib diisi untuk Lead' 
+          error: 'agent_id wajib diisi untuk role Lead',
+          code: 'AGENT_ID_REQUIRED',
+          hint: 'Lead harus menentukan agent yang akan ditugaskan'
         });
       }
 
+      // Validasi: Apakah agent_id valid dan role = 'agent'?
       const { data: targetAgent, error: agentError } = await supabase
         .from('users')
         .select('id, role, full_name')
@@ -201,57 +217,111 @@ const assignTicket = async (req, res) => {
       if (agentError || !targetAgent) {
         return res.status(404).json({ 
           error: 'Agent tidak ditemukan',
-          details: agentError?.message 
+          code: 'AGENT_NOT_FOUND',
+          details: agentError?.message,
+          agent_id_requested: agent_id
         });
       }
 
       if (targetAgent.role !== 'agent') {
         return res.status(400).json({ 
-          error: 'Target harus memiliki role agent' 
+          error: `User dengan ID tersebut memiliki role '${targetAgent.role}', bukan 'agent'`,
+          code: 'INVALID_AGENT_ROLE',
+          hint: 'Hanya user dengan role agent yang bisa ditugaskan'
         });
       }
 
       targetAgentId = agent_id;
-    } 
-    else if (userRole === 'agent') {
+      assignmentType = 'lead_assign';
+
+    } else if (userRole === 'agent') {
+      // ---- CASE 2: AGENT SELF-CLAIM ----
+      // Agent HANYA bisa claim tiket yang belum di-assign
       if (message.assigned_to) {
+        // Cek apakah tiket sudah di-assign ke diri sendiri
+        if (message.assigned_to === userId) {
+          return res.status(400).json({
+            error: 'Tiket ini sudah di-assign ke Anda',
+            code: 'ALREADY_ASSIGNED_TO_YOU'
+          });
+        }
+
+        // Tiket sudah di-assign ke agent lain
         return res.status(403).json({ 
-          error: 'Tiket sudah di-assign ke agent lain. Hanya Lead yang bisa reassign.' 
+          error: 'Tiket sudah di-assign ke agent lain',
+          code: 'TICKET_ALREADY_ASSIGNED',
+          hint: 'Hanya Lead yang bisa melakukan reassign. Silakan hubungi Lead Anda.',
+          current_assignee: message.assigned_to
         });
       }
 
+      // Agent claim untuk diri sendiri (abaikan agent_id dari body)
       targetAgentId = userId;
+      assignmentType = 'agent_claim';
+
+    } else {
+      // Role tidak valid (seharusnya tidak terjadi karena sudah ada middleware)
+      return res.status(403).json({
+        error: 'Role tidak diizinkan untuk melakukan assign',
+        code: 'INVALID_ROLE',
+        your_role: userRole
+      });
     }
 
+    // database update
     const { data: updatedMessage, error: updateError } = await supabase
       .from('messages')
       .update({ 
         assigned_to: targetAgentId,
-        status: 'in_progress'
+        status: 'in_progress',
+        updated_at: new Date().toISOString() // Eksplisit update timestamp
       })
       .eq('id', id)
       .select(`
         *,
         assigned_agent:assigned_to (
           id,
-          full_name
+          full_name,
+          role
         )
       `)
       .single();
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error('❌ Database update error:', updateError);
+      throw updateError;
+    }
+
+    // response success
+    const successMessage = assignmentType === 'lead_assign'
+      ? `Tiket berhasil di-assign ke ${updatedMessage.assigned_agent?.full_name || 'agent'}`
+      : 'Anda berhasil claim tiket ini';
 
     res.json({
       success: true,
-      message: userRole === 'lead' 
-        ? 'Tiket berhasil di-assign ke agent' 
-        : 'Anda berhasil claim tiket ini',
-      data: updatedMessage
+      message: successMessage,
+      assignment_type: assignmentType,
+      data: {
+        id: updatedMessage.id,
+        customer_name: updatedMessage.customer_name,
+        subject: updatedMessage.subject,
+        status: updatedMessage.status,
+        priority: updatedMessage.priority,
+        assigned_to: updatedMessage.assigned_to,
+        assigned_agent: updatedMessage.assigned_agent,
+        updated_at: updatedMessage.updated_at
+      }
     });
 
   } catch (error) {
     console.error('❌ Error assign ticket:', error);
-    res.status(500).json({ error: 'Gagal assign tiket' });
+    
+    // Detailed error response
+    res.status(500).json({ 
+      error: 'Gagal melakukan assignment',
+      code: 'ASSIGNMENT_FAILED',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
