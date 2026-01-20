@@ -141,17 +141,19 @@ export async function fetchAIResponseSuggestion(messageId: number): Promise<AIRe
  * kirim balasan ke pesan customer
  * @param messageId - ID pesan yang mau dibales
  * @param content - isi balasan
- * @returns Promise<boolean> - status sukses
+ * @returns Promise dengan data reply termasuk ID-nya
  */
-export async function sendReply(messageId: number, content: string): Promise<boolean> {
+export async function sendReply(messageId: number, content: string): Promise<{
+  success: boolean;
+  data?: { id: number; reply_content: string; created_at: string };
+}> {
   const response = await fetch(`${API_BASE_URL}/api/messages/${messageId}/reply`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify({ reply_content: content }),
   });
   
-  const data = await handleResponse<{ success: boolean }>(response);
-  return data.success;
+  return handleResponse(response);
 }
 
 /**

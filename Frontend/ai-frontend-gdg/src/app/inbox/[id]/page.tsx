@@ -738,14 +738,31 @@ export default function MessageDetailPage() {
     setIsEditing(true);
     try {
       await editReply(editingReply.id, editContent.trim());
+      
+      // Update local state immediately so UI reflects the change
+      setMessage(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          conversation: prev.conversation?.map(msg => 
+            msg.id === editingReply.id 
+              ? { ...msg, content: editContent.trim() }
+              : msg
+          ),
+          replies: prev.replies?.map(reply =>
+            reply.id === editingReply.id
+              ? { ...reply, reply_content: editContent.trim(), updated_at: new Date().toISOString() }
+              : reply
+          )
+        };
+      });
+      
       showNotification('success', 'Reply updated successfully');
       setEditingReply(null);
       setEditContent('');
-      // Reload message to get updated content
-      loadMessage();
     } catch (error) {
       console.error('Failed to edit reply:', error);
-      showNotification('error', 'Failed to update reply');
+      showNotification('error', error instanceof Error ? error.message : 'Failed to update reply');
     } finally {
       setIsEditing(false);
     }
@@ -796,10 +813,39 @@ export default function MessageDetailPage() {
       ]);
       
       const mockMsg = MOCK_MESSAGES[messageId];
+      
+      // Build conversation from backend data
+      const conversation: Array<{id: number; sender: 'customer' | 'support'; content: string; timestamp: string}> = [];
+      
+      // Add the original customer message from backend
+      if (msgData.content) {
+        conversation.push({
+          id: msgData.id,
+          sender: 'customer' as const,
+          content: msgData.content,
+          timestamp: msgData.created_at || msgData.timestamp || new Date().toISOString()
+        });
+      }
+      
+      // Add all replies from backend as support messages
+      if (msgData.replies && msgData.replies.length > 0) {
+        msgData.replies.forEach(reply => {
+          conversation.push({
+            id: reply.id,
+            sender: 'support' as const,
+            content: reply.reply_content,
+            timestamp: reply.created_at
+          });
+        });
+      }
+      
+      // Sort conversation by timestamp
+      conversation.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      
       const fullMessage = {
         ...msgData,
         customer_email: mockMsg?.customer_email || msgData.customer_email,
-        conversation: mockMsg?.conversation || [],
+        conversation,
       } as Message;
       
       setMessage(fullMessage);
@@ -847,19 +893,32 @@ export default function MessageDetailPage() {
     
     setIsSending(true);
     try {
-      await sendReply(messageId, text);
+      const response = await sendReply(messageId, text);
+      
+      // Use the reply ID from backend if available
+      const replyId = response.data?.id || Date.now();
       
       const newReply = {
-        id: Date.now(),
+        id: replyId,
         sender: 'support' as const,
         content: text,
-        timestamp: new Date().toISOString()
+        timestamp: response.data?.created_at || new Date().toISOString()
       };
       
-      setMessage(prev => prev ? {
-        ...prev,
-        conversation: [...(prev.conversation || []), newReply]
-      } : null);
+      // Add to conversation only if this ID doesn't already exist
+      setMessage(prev => {
+        if (!prev) return null;
+        
+        // Check if this reply already exists
+        const existingReply = prev.conversation?.find(msg => msg.id === replyId);
+        if (existingReply) return prev; // Don't add duplicate
+        
+        return {
+          ...prev,
+          conversation: [...(prev.conversation || []), newReply],
+          replies: [...(prev.replies || []), { id: replyId, reply_content: text, created_at: newReply.timestamp }]
+        };
+      });
       
       setExpandedMessages(new Set([newReply.id]));
       setShowReply(false);
