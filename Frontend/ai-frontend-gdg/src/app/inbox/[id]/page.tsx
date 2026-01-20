@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Message, AISummary, AIResponseSuggestion } from '@/types';
-import { fetchMessageById, fetchAISummary, fetchAIResponseSuggestion, sendReply, markAsRead, deleteMessage, archiveMessage } from '@/lib/api';
+import { fetchMessageById, fetchAISummary, fetchAIResponseSuggestion, sendReply, markAsRead, deleteMessage, archiveMessage, editReply } from '@/lib/api';
 
 // ============================================================================
 // KONFIGURASI TAG PRIORITAS - ada indikator titiknya
@@ -271,10 +271,10 @@ const ReplyIcon = () => (
   </svg>
 );
 
-const ForwardIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="15 17 20 12 15 7"/>
-    <path d="M4 18v-2a4 4 0 014-4h12"/>
+const EditIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
   </svg>
 );
 
@@ -513,8 +513,8 @@ function ReplyComposer({
             disabled={!replyText.trim() || isSending}
             className="
               flex items-center gap-2 px-6 py-3 
-              text-base font-semibold text-white 
-              bg-linear-to-r from-blue-600 to-blue-700 
+              text-base font-semibold
+              bg-gradient-to-r from-blue-600 to-blue-700 
               hover:from-blue-700 hover:to-blue-800
               rounded-md shadow-md shadow-blue-500/25
               hover:shadow-lg hover:shadow-blue-500/30
@@ -522,13 +522,14 @@ function ReplyComposer({
               transition-all duration-200
               focus-ring
             "
+            style={{ color: 'white' }}
           >
             {isSending ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               <SendIcon />
             )}
-            <span>Send Reply</span>
+            <span className="text-white">Send Reply</span>
           </button>
         </div>
         
@@ -551,22 +552,39 @@ function MessageBubble({
   customerName, 
   customerEmail,
   isExpanded,
-  onToggle
+  onToggle,
+  onEdit,
+  replyId
 }: { 
   message: { id: number; sender: string; content: string; timestamp: string };
   customerName: string;
   customerEmail: string;
   isExpanded: boolean;
   onToggle: () => void;
+  onEdit?: (replyId: number, currentContent: string) => void;
+  replyId?: number;
 }) {
   const isSupport = message.sender === 'support';
   const [isStarred, setIsStarred] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setShowMenu(false);
+    if (showMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showMenu]);
   
   return (
-    <article className="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
-      {/* Header - Always visible */}
-      <button 
+    <article className="border-b border-gray-200 dark:border-gray-700 last:border-b-0 relative">
+      {/* Header - Always visible - using div with onClick instead of button to avoid nesting */}
+      <div 
         onClick={onToggle}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onToggle(); }}
         className="w-full flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-left focus-ring"
       >
         {/* Avatar */}
@@ -602,15 +620,18 @@ function MessageBubble({
           <time className="hidden sm:inline text-xs text-gray-500 dark:text-gray-400">
             {formatFullDate(message.timestamp)}
           </time>
-          <button 
+          <span 
             onClick={(e) => { e.stopPropagation(); setIsStarred(!isStarred); }} 
-            className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setIsStarred(!isStarred); } }}
+            className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
           >
             <StarIcon filled={isStarred} />
-          </button>
+          </span>
           {isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
         </div>
-      </button>
+      </div>
       
       {/* Content - Only when expanded */}
       {isExpanded && (
@@ -625,13 +646,44 @@ function MessageBubble({
               <ReplyIcon />
               <span>Reply</span>
             </button>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors focus-ring">
-              <ForwardIcon />
-              <span>Forward</span>
-            </button>
-            <button className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors focus-ring">
-              <MoreIcon />
-            </button>
+            
+            {/* Three dots menu with dropdown */}
+            <div className="relative">
+              <button 
+                onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
+                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors focus-ring"
+              >
+                <MoreIcon />
+              </button>
+              
+              {/* Dropdown menu */}
+              {showMenu && (
+                <div 
+                  className="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-[100]"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {isSupport && onEdit && replyId && (
+                    <button
+                      onClick={() => {
+                        onEdit(replyId, message.content);
+                        setShowMenu(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <EditIcon />
+                      <span>Edit Reply</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowMenu(false)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <StarIcon filled={false} />
+                    <span>{isStarred ? 'Unstar' : 'Star'}</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -659,9 +711,49 @@ export default function MessageDetailPage() {
   const [isArchiving, setIsArchiving] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   
+  // Edit reply state
+  const [editingReply, setEditingReply] = useState<{ id: number; content: string } | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  
   const showNotification = (type: 'success' | 'error', message: string) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 3000);
+  };
+  
+  // Handle edit reply
+  const handleStartEdit = (replyId: number, currentContent: string) => {
+    setEditingReply({ id: replyId, content: currentContent });
+    setEditContent(currentContent);
+  };
+  
+  const handleSaveEdit = async () => {
+    if (!editingReply || !editContent.trim()) return;
+    
+    if (editContent.trim().length < 10) {
+      showNotification('error', 'Reply must be at least 10 characters');
+      return;
+    }
+    
+    setIsEditing(true);
+    try {
+      await editReply(editingReply.id, editContent.trim());
+      showNotification('success', 'Reply updated successfully');
+      setEditingReply(null);
+      setEditContent('');
+      // Reload message to get updated content
+      loadMessage();
+    } catch (error) {
+      console.error('Failed to edit reply:', error);
+      showNotification('error', 'Failed to update reply');
+    } finally {
+      setIsEditing(false);
+    }
+  };
+  
+  const handleCancelEdit = () => {
+    setEditingReply(null);
+    setEditContent('');
   };
   
   const handleDeleteMessage = async () => {
@@ -952,48 +1044,104 @@ export default function MessageDetailPage() {
           </div>
           
           {/* Conversation Thread */}
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
             <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h2 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white">
                 Conversation ({message.conversation?.length || 0} messages)
               </h2>
             </div>
             
-            {message.conversation?.map((msg) => (
-              <MessageBubble
-                key={msg.id}
-                message={msg}
-                customerName={message.customer_name}
-                customerEmail={message.customer_email!}
-                isExpanded={expandedMessages.has(msg.id)}
-                onToggle={() => toggleMessage(msg.id)}
-              />
-            ))}
+            {message.conversation?.map((msg) => {
+              // Find the matching reply ID for support messages
+              // Count support messages before this one to get the correct reply index
+              let replyId: number | undefined = undefined;
+              if (msg.sender === 'support' && message.replies && message.replies.length > 0) {
+                const supportMessagesBeforeThis = message.conversation
+                  ?.slice(0, message.conversation.indexOf(msg))
+                  .filter(m => m.sender === 'support').length || 0;
+                // Only set replyId if we have a matching reply from backend
+                replyId = message.replies[supportMessagesBeforeThis]?.id;
+              }
+              
+              return (
+                <MessageBubble
+                  key={msg.id}
+                  message={msg}
+                  customerName={message.customer_name}
+                  customerEmail={message.customer_email!}
+                  isExpanded={expandedMessages.has(msg.id)}
+                  onToggle={() => toggleMessage(msg.id)}
+                  onEdit={handleStartEdit}
+                  replyId={replyId}
+                />
+              );
+            })}
           </div>
+          
+          {/* Edit Reply Modal */}
+          {editingReply && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Edit Reply</h3>
+                </div>
+                <div className="p-6">
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="w-full h-48 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Edit your reply..."
+                  />
+                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    Minimum 10 characters required
+                  </p>
+                </div>
+                <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                  <button
+                    onClick={handleCancelEdit}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={isEditing || editContent.trim().length < 10}
+                    className="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    {isEditing ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Changes'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* Reply Area */}
           {!showReply ? (
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-5 sm:p-6">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md border border-gray-300 dark:border-gray-700 p-5 sm:p-6">
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => setShowReply(true)}
                   className="
-                    flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5
-                    text-sm font-semibold text-white
-                    bg-gradient-to-r from-blue-600 to-blue-700
-                    hover:from-blue-700 hover:to-blue-800
-                    rounded-md shadow-md shadow-blue-500/25
-                    hover:shadow-lg hover:shadow-blue-500/30
+                    flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3
+                    text-sm font-bold text-white
+                    bg-gradient-to-r from-blue-600 to-indigo-600
+                    hover:from-blue-700 hover:to-indigo-700
+                    rounded-lg shadow-lg shadow-blue-500/30
+                    hover:shadow-xl hover:shadow-blue-500/40
                     transition-all duration-200
                     focus-ring
+                    border border-blue-700
                   "
                 >
                   <ReplyIcon />
                   <span>Reply</span>
-                </button>
-                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors focus-ring">
-                  <ForwardIcon />
-                  <span>Forward</span>
                 </button>
               </div>
             </div>

@@ -677,7 +677,8 @@ function InboxPageContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [archivedMessages, setArchivedMessages] = useState<Message[]>([]);
   const [viewMode, setViewMode] = useState<'inbox' | 'archived'>('inbox');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -803,8 +804,22 @@ function InboxPageContent() {
     }
   }, []);
   
-  useEffect(() => { loadMessages(); }, [loadMessages]);
+  useEffect(() => {
+    setHasMounted(true);
+    loadMessages();
+  }, [loadMessages]);
   
+  // Prevent hydration mismatch by ensuring consistent initial render
+  if (!hasMounted) {
+    return (
+      <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
       {/* notifikasi toast */}

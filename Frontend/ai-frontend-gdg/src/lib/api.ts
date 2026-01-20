@@ -82,7 +82,7 @@ export async function fetchMessages(): Promise<Message[]> {
   // ubah status dari backend ke format frontend
   return data.map(msg => ({
     ...msg,
-    status: normalizeStatus(msg.status) as any
+    status: normalizeStatus(msg.status)
   }));
 }
 
@@ -101,7 +101,7 @@ export async function fetchMessageById(id: number): Promise<Message> {
   // ubah status dari backend ke format frontend
   return {
     ...data,
-    status: normalizeStatus(data.status) as any
+    status: normalizeStatus(data.status)
   };
 }
 
@@ -157,32 +157,126 @@ export async function sendReply(messageId: number, content: string): Promise<boo
 /**
  * tandain pesan udah dibaca (khusus UI aja)
  */
-export async function markAsRead(_messageId: number): Promise<boolean> {
+export async function markAsRead(messageId: number): Promise<boolean> {
+  // placeholder - backend belum support fitur ini
+  console.log('Marking message as read:', messageId);
   return Promise.resolve(true);
 }
 
 /**
- * update status pesan (di-handle lewat endpoint reply)
+ * hapus pesan dari backend (khusus lead aja)
+ * @param messageId - ID pesan yang mau dihapus
+ * @returns Promise<boolean> - status sukses
+ */
+export async function deleteMessage(messageId: number): Promise<boolean> {
+  const response = await fetch(`${API_BASE_URL}/api/messages/${messageId}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  });
+  
+  const data = await handleResponse<{ success: boolean }>(response);
+  return data.success;
+}
+
+/**
+ * arsipkan pesan (placeholder UI aja - backend belum support)
+ */
+export async function archiveMessage(messageId: number): Promise<boolean> {
+  // placeholder - backend belum support fitur ini
+  console.log('Archiving message:', messageId);
+  return Promise.resolve(true);
+}
+
+// ============================================================================
+// ENDPOINT TICKET ASSIGNMENT (baru dari backend)
+// ============================================================================
+
+/**
+ * assign tiket ke agent (Lead assign atau Agent self-claim)
+ * @param messageId - ID pesan/tiket
+ * @param agentId - ID agent (wajib kalo lead, opsional kalo agent claim sendiri)
+ * @returns Promise dengan data assignment
+ */
+export async function assignTicket(messageId: number, agentId?: string): Promise<{
+  success: boolean;
+  message: string;
+  assignment_type: 'lead_assign' | 'agent_claim';
+  data: Message;
+}> {
+  const response = await fetch(`${API_BASE_URL}/api/messages/${messageId}/assign`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(agentId ? { agent_id: agentId } : {}),
+  });
+  
+  return handleResponse(response);
+}
+
+/**
+ * unassign tiket dari agent (khusus lead)
+ * @param messageId - ID pesan/tiket
+ * @returns Promise<boolean> - status sukses
+ */
+export async function unassignTicket(messageId: number): Promise<boolean> {
+  const response = await fetch(`${API_BASE_URL}/api/messages/${messageId}/unassign`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+  });
+  
+  const data = await handleResponse<{ success: boolean }>(response);
+  return data.success;
+}
+
+/**
+ * ambil daftar semua agents (khusus lead buat assign dropdown)
+ * @returns Promise<Agent[]> - array agents
+ */
+export async function fetchAgents(): Promise<{ id: string; full_name: string; role: string }[]> {
+  const response = await fetch(`${API_BASE_URL}/api/messages/agents/list`, {
+    headers: getAuthHeaders(),
+  });
+  
+  return handleResponse(response);
+}
+
+/**
+ * update status pesan manual
+ * @param messageId - ID pesan
+ * @param status - status baru ('open' | 'in_progress' | 'resolved')
+ * @returns Promise<boolean> - status sukses
  */
 export async function updateMessageStatus(
-  _messageId: number, 
-  _status: 'Open' | 'In Progress' | 'Closed'
+  messageId: number, 
+  status: 'open' | 'in_progress' | 'resolved'
 ): Promise<boolean> {
-  return Promise.resolve(true);
+  const response = await fetch(`${API_BASE_URL}/api/messages/${messageId}/status`, {
+    method: 'PATCH',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ status }),
+  });
+  
+  const data = await handleResponse<{ success: boolean }>(response);
+  return data.success;
 }
 
 /**
- * hapus pesan (placeholder UI aja)
+ * edit balasan yang udah dikirim
+ * @param replyId - ID balasan
+ * @param content - isi balasan baru
+ * @returns Promise dengan data balasan yang diupdate
  */
-export async function deleteMessage(_messageId: number): Promise<boolean> {
-  return Promise.resolve(true);
-}
-
-/**
- * arsipkan pesan (placeholder UI aja)
- */
-export async function archiveMessage(_messageId: number): Promise<boolean> {
-  return Promise.resolve(true);
+export async function editReply(replyId: number, content: string): Promise<{
+  success: boolean;
+  message: string;
+  data: { id: number; reply_content: string; updated_at: string };
+}> {
+  const response = await fetch(`${API_BASE_URL}/api/messages/replies/${replyId}`, {
+    method: 'PATCH',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ reply_content: content }),
+  });
+  
+  return handleResponse(response);
 }
 
 // ============================================================================

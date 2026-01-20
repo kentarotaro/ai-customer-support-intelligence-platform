@@ -9,8 +9,8 @@
 
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { User, AuthSession } from '@/types';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { User } from '@/types';
 
 // key storage
 const TOKEN_KEY = 'ai_support_token';
@@ -54,31 +54,31 @@ export function useAuth() {
   return context;
 }
 
+// helper function buat load dari storage
+function getInitialToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+function getInitialUser(): User | null {
+  if (typeof window === 'undefined') return null;
+  const storedUser = localStorage.getItem(USER_KEY);
+  if (!storedUser) return null;
+  try {
+    return JSON.parse(storedUser);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Komponen AuthProvider
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // load auth yang disimpen pas mount
-  useEffect(() => {
-    const storedToken = localStorage.getItem(TOKEN_KEY);
-    const storedUser = localStorage.getItem(USER_KEY);
-    
-    if (storedToken && storedUser) {
-      try {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-      } catch {
-        // data yang disimpen invalid, apus aja
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
-      }
-    }
-    setIsLoading(false);
-  }, []);
+  const [user, setUser] = useState<User | null>(() => getInitialUser());
+  const [token, setToken] = useState<string | null>(() => getInitialToken());
+  // start dengan false karena kita udah load dari localStorage di useState initializer
+  const [isLoading] = useState(false);
 
   // simpen auth ke storage
   const saveAuth = (newToken: string, newUser: User) => {

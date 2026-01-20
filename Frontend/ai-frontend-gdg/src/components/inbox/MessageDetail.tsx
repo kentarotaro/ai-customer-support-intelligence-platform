@@ -9,8 +9,8 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Message, AISummary, AIResponseSuggestion, ConversationMessage } from '@/types';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Message, AISummary, AIResponseSuggestion } from '@/types';
 import { 
   fetchAISummary, 
   fetchAIResponseSuggestion, 
@@ -26,7 +26,6 @@ import {
   ArrowLeftIcon, 
   SendIcon, 
   ClockIcon, 
-  UserIcon,
   MailIcon,
   SparklesIcon
 } from '@/components/icons/Icons';
@@ -86,23 +85,15 @@ export default function MessageDetail({
   const [isSending, setIsSending] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
 
-  // load ringkasan AI sama saran balasan pas pesan berubah
-  useEffect(() => {
-    if (message) {
-      loadAISummary(message.id);
-      loadAIResponseSuggestion(message.id);
-    }
-  }, [message?.id]);
-
   // ambil ringkasan AI
-  const loadAISummary = async (messageId: number) => {
+  const loadAISummary = useCallback(async (messageId: number, category?: string) => {
     setSummaryLoading(true);
     setSummaryError(null);
     
     try {
       const data = await fetchAISummary(messageId);
       setSummary(data);
-    } catch (err) {
+    } catch {
       setSummaryError('Failed to generate summary. Please try again.');
       // pake data mock sebagai fallback
       setSummary({
@@ -113,26 +104,26 @@ export default function MessageDetail({
           'They have tried basic troubleshooting steps',
           'Expecting a quick resolution',
         ],
-        suggestedCategory: message?.category,
+        suggestedCategory: (category || 'General') as 'Billing' | 'Technical' | 'General' | 'Account' | 'Feature Request' | 'Inquiry',
         confidence: 0.85,
       });
       setSummaryError(null);
     } finally {
       setSummaryLoading(false);
     }
-  };
+  }, []);
 
   // ambil saran balasan AI
-  const loadAIResponseSuggestion = async (messageId: number) => {
+  const loadAIResponseSuggestion = useCallback(async (messageId: number, customerName?: string) => {
     setSuggestionLoading(true);
     
     try {
       const data = await fetchAIResponseSuggestion(messageId);
       setResponseSuggestion(data);
-    } catch (err) {
+    } catch {
       // pake data mock sebagai fallback
       setResponseSuggestion({
-        suggestion: `Dear ${message?.customer_name || 'Customer'},
+        suggestion: `Dear ${customerName || 'Customer'},
 
 Thank you for reaching out to us. I completely understand how frustrating this situation must be, and I sincerely apologize for any inconvenience caused.
 
@@ -150,7 +141,15 @@ Customer Support Team`,
     } finally {
       setSuggestionLoading(false);
     }
-  };
+  }, []);
+
+  // load ringkasan AI sama saran balasan pas pesan berubah
+  useEffect(() => {
+    if (message) {
+      loadAISummary(message.id, message.category);
+      loadAIResponseSuggestion(message.id, message.customer_name);
+    }
+  }, [message, loadAISummary, loadAIResponseSuggestion]);
 
   // handle pemakaian saran AI
   const handleUseSuggestion = (text: string) => {
@@ -322,9 +321,9 @@ Customer Support Team`,
                 {!showComposer ? (
                   <button
                     onClick={() => setShowComposer(true)}
-                    className="w-full p-5 text-left border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 hover:border-blue-500 hover:text-blue-500 dark:hover:border-blue-400 dark:hover:text-blue-400 transition-colors"
+                    className="w-full p-5 text-left bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800 border-2 border-blue-300 dark:border-gray-600 rounded-lg text-blue-700 dark:text-gray-300 hover:border-blue-500 hover:from-blue-100 hover:to-indigo-100 dark:hover:border-blue-400 dark:hover:text-blue-400 transition-all font-medium shadow-sm"
                   >
-                    Click to write a reply...
+                    ✍️ Click to write a reply...
                   </button>
                 ) : (
                   <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -345,14 +344,14 @@ Customer Support Team`,
                           setShowComposer(false);
                           setReplyText('');
                         }}
-                        className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={handleSendReply}
                         disabled={!replyText.trim() || isSending}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg transition-colors"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-blue-400 disabled:to-indigo-400 text-white text-sm font-bold rounded-lg shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all"
                       >
                         {isSending ? (
                           <>

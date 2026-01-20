@@ -355,7 +355,7 @@ export default function RegisterPage() {
             
             {/* info tentang fitur */}
             <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 font-medium">What you'll get:</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 font-medium">What you&apos;ll get:</p>
               <ul className="space-y-2.5">
                 <li className="flex items-start gap-2.5 text-xs text-gray-600 dark:text-gray-400">
                   <svg className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">

@@ -44,12 +44,22 @@ export interface AssignedAgent {
 }
 
 /**
+ * info agent yang reply
+ */
+export interface RepliedBy {
+  id: string;
+  full_name: string;
+}
+
+/**
  * balasan ke sebuah pesan
  */
 export interface MessageReply {
   id: number;
   reply_content: string;
   created_at: string;
+  updated_at?: string;
+  replied_by?: RepliedBy;
 }
 
 /**
@@ -203,4 +213,22 @@ export interface AnalyticsOverview {
     Inquiry: number;
     General: number;
   };
+}
+/**
+ * agent info dari endpoint /agents/list
+ */
+export interface Agent {
+  id: string;
+  full_name: string;
+  role: 'agent' | 'lead';
+}
+
+/**
+ * response assign ticket
+ */
+export interface AssignTicketResponse {
+  success: boolean;
+  message: string;
+  assignment_type: 'lead_assign' | 'agent_claim';
+  data: Message;
 }
