@@ -10,10 +10,31 @@ A comprehensive Gmail-like customer support platform with AI-powered features in
 
 ```
 ai-customer-support-intelligence-platform/
-├── Backend/                          # Express.js backend server
-│   ├── index.js                      # Main server file with all API endpoints
-│   ├── package.json                  # Backend dependencies
-│   └── README.md                     # Backend documentation
+├── Backend/                          # Backend Server (Node.js + Express)
+│   ├── config/                       # Konfigurasi Koneksi Eksternal
+│   │   ├── gemini.js                 # Setup Google Gemini AI
+│   │   └── supabaseClient.js         # Setup Supabase Database
+│   │
+│   ├── controllers/                  # Logika Bisnis (Otak Aplikasi)
+│   │   ├── authController.js         # Logic Login/Register/Logout
+│   │   ├── dashboardController.js    # Logic Statistik & Analytics (BARU)
+│   │   └── messageController.js      # Logic Inbox, Reply, & Assign Ticket
+│   │
+│   ├── middleware/                   # Satpam & Filter
+│   │   ├── authMiddleware.js         # Cek Token & Role (Agent vs Lead)
+│   │   └── rateLimiter.js            # Batasi Spam (Anti-Abuse)
+│   │
+│   ├── routes/                       # Pintu Masuk URL (API Endpoints)
+│   │   ├── authRoutes.js             # /api/auth/...
+│   │   ├── dashboardRoutes.js        # /api/dashboard/... (BARU)
+│   │   └── messageRoutes.js          # /api/messages/...
+│   │
+│   ├── services/                     # Layanan Khusus
+│   │   └── aiService.js              # Fungsi untuk ngobrol sama AI
+│   │
+│   ├── index.js                      # File Utama (Server Launcher)
+│   ├── package.json                  # Daftar Dependencies
+│   └── README.md                     # Dokumentasi
 │
 └── Frontend/                         # Next.js frontend application
     └── ai-frontend-gdg/
