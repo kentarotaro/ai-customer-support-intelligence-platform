@@ -35,11 +35,6 @@ const register = async (req, res) => {
       throw authError;
     }
 
-    // ---------------------------------------------------------
-    // ❌ STEP B DIHAPUS (KARENA SUDAH DIKERJAKAN TRIGGER)
-    // Jangan insert manual lagi ke public.users di sini
-    // ---------------------------------------------------------
-
     // 3. Sukses
     res.status(201).json({
       success: true,
