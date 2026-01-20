@@ -6,6 +6,7 @@ const dotenv = require('dotenv');
 // Import Routes
 const messageRoutes = require('./routes/messageRoutes');
 const authRoutes = require('./routes/authRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 // Import Middleware
 const { authLimiter, aiLimiter, generalLimiter } = require('./middleware/rateLimiter');
@@ -33,6 +34,7 @@ app.use('/api/messages', aiLimiter);
 // ====== ROUTES ======
 app.use('/api/messages', messageRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Root Endpoint
 app.get('/', (req, res) => {
