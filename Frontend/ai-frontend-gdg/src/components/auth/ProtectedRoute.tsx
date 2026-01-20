@@ -43,10 +43,9 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   // tampilin loading pas lagi ngecek autentikasi
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">Loading...</p>
+      <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -55,10 +54,9 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   // jangan render children sampe autentikasi beres
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">Redirecting to login...</p>
+      <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -67,8 +65,8 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   // cek akses role
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
+      <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
+        <div className="flex-1 flex items-center justify-center">
           <p className="text-red-500 dark:text-red-400">Access denied. Insufficient permissions.</p>
         </div>
       </div>
