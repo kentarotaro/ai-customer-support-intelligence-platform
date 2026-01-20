@@ -55,7 +55,12 @@ const getMessageDetail = async (req, res) => {
         replies (
           id,
           reply_content,
-          created_at
+          created_at,
+          updated_at,
+          replied_by (
+            id,
+            full_name
+          )
         )
       `)
       .eq('id', id)
@@ -483,6 +488,136 @@ const getAgents = async (req, res) => {
   }
 };
 
+/**
+ * 9. DELETE MESSAGE (Soft Delete atau Hard Delete)
+ */
+const deleteMessage = async (req, res) => {
+  const { id } = req.params;
+  const userRole = req.user.role;
+
+  try {
+    // Validasi: Cek apakah message exists
+    const { data: message, error: fetchError } = await supabase
+      .from('messages')
+      .select('id, customer_name, assigned_to')
+      .eq('id', id)
+      .single();
+
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        return res.status(404).json({ 
+          error: 'Pesan tidak ditemukan',
+          code: 'MESSAGE_NOT_FOUND'
+        });
+      }
+      throw fetchError;
+    }
+
+    // Authorization: Hanya Lead yang bisa delete
+    if (userRole !== 'lead') {
+      return res.status(403).json({
+        error: 'Hanya Lead yang dapat menghapus pesan',
+        code: 'FORBIDDEN',
+        hint: 'Fitur delete hanya tersedia untuk role Lead'
+      });
+    }
+
+    // Hard Delete: Hapus dari database
+    const { error: deleteError } = await supabase
+      .from('messages')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) throw deleteError;
+
+    res.json({
+      success: true,
+      message: `Pesan dari "${message.customer_name}" berhasil dihapus`,
+      deleted_id: id
+    });
+
+  } catch (error) {
+    console.error('❌ Error delete message:', error);
+    res.status(500).json({ 
+      error: 'Gagal menghapus pesan',
+      code: 'DELETE_FAILED',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+/**
+ * 10. EDIT REPLY (Update reply yang sudah dikirim)
+ */
+const editReply = async (req, res) => {
+  const { id } = req.params; // Reply ID
+  const { reply_content } = req.body;
+  const userId = req.user.id;
+
+  try {
+    // Validasi input
+    if (!reply_content || reply_content.trim().length < 10) {
+      return res.status(400).json({
+        error: 'Isi balasan minimal 10 karakter',
+        code: 'INVALID_INPUT'
+      });
+    }
+
+    // Cek apakah reply exists dan milik user ini
+    const { data: reply, error: fetchError } = await supabase
+      .from('replies')
+      .select('id, replied_by, reply_content, message_id')
+      .eq('id', id)
+      .single();
+
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        return res.status(404).json({
+          error: 'Balasan tidak ditemukan',
+          code: 'REPLY_NOT_FOUND'
+        });
+      }
+      throw fetchError;
+    }
+
+    // Authorization: Hanya yang reply boleh edit (atau Lead)
+    if (reply.replied_by !== userId && req.user.role !== 'lead') {
+      return res.status(403).json({
+        error: 'Anda tidak memiliki izin untuk mengedit balasan ini',
+        code: 'FORBIDDEN',
+        hint: 'Hanya pembuat balasan atau Lead yang dapat mengedit'
+      });
+    }
+
+    // Update reply
+    const { data: updatedReply, error: updateError } = await supabase
+      .from('replies')
+      .update({ 
+        reply_content: reply_content.trim(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+
+    res.json({
+      success: true,
+      message: 'Balasan berhasil diperbarui',
+      data: updatedReply
+    });
+
+  } catch (error) {
+    console.error('❌ Error edit reply:', error);
+    res.status(500).json({
+      error: 'Gagal memperbarui balasan',
+      code: 'UPDATE_FAILED',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 // ===== EXPORTS =====
 module.exports = { 
   getMessages, 
@@ -492,5 +627,7 @@ module.exports = {
   unassignTicket,
   replyMessage,
   updateStatus,
-  getAgents
+  getAgents,
+  deleteMessage,
+  editReply
 };

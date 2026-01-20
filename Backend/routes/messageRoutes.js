@@ -35,6 +35,14 @@ const replyValidation = [
     .trim()
 ];
 
+const editReplyValidation = [
+  body('reply_content')
+    .notEmpty().withMessage('Isi balasan wajib diisi')
+    .isLength({ min: 10 }).withMessage('Balasan minimal 10 karakter')
+    .isLength({ max: 3000 }).withMessage('Balasan maksimal 3000 karakter')
+    .trim()
+];
+
 const assignValidation = [
   body('agent_id')
     .optional()
@@ -95,6 +103,19 @@ router.patch('/:id/status',
   authenticateToken,
   statusValidation,
   messageController.updateStatus
+);
+
+// DELETE /api/messages/:id - Delete message (Lead Only)
+router.delete('/:id', 
+  authenticateToken, 
+  authorizeRole(['lead']),
+  messageController.deleteMessage
+);
+
+router.patch('/replies/:id',
+  authenticateToken,
+  editReplyValidation,
+  messageController.editReply
 );
 
 module.exports = router;
