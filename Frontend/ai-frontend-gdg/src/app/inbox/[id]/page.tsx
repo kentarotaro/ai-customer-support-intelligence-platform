@@ -578,7 +578,7 @@ function MessageBubble({
   }, [showMenu]);
   
   return (
-    <article className="border-b border-gray-200 dark:border-gray-700 last:border-b-0 relative">
+    <article className="border-b border-gray-200 dark:border-gray-700 last:border-b-0 relative z-10 hover:z-20">
       {/* Header - Always visible - using div with onClick instead of button to avoid nesting */}
       <div 
         onClick={onToggle}
@@ -656,10 +656,10 @@ function MessageBubble({
                 <MoreIcon />
               </button>
               
-              {/* Dropdown menu */}
+              {/* Dropdown menu - opens upward to avoid overlapping with messages below */}
               {showMenu && (
                 <div 
-                  className="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-[100]"
+                  className="absolute right-0 bottom-full mb-1 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-[9999]"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {isSupport && onEdit && replyId && (
@@ -942,8 +942,8 @@ export default function MessageDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col items-center justify-center gap-4">
-        <div className="w-12 h-12 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-base text-gray-500 dark:text-gray-400">Loading message...</p>
+        <div className="w-12 h-12 border-4 border-gray-300 dark:border-gray-600 border-t-gray-600 dark:border-t-blue-500 rounded-full animate-spin" />
+        <p className="text-base text-gray-600 dark:text-gray-400">Loading message...</p>
       </div>
     );
   }

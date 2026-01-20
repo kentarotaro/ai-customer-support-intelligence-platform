@@ -45,7 +45,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return (
       <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
         <div className="flex-1 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-gray-300 dark:border-gray-600 border-t-gray-600 dark:border-t-blue-500 rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -56,7 +56,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return (
       <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
         <div className="flex-1 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-gray-300 dark:border-gray-600 border-t-gray-600 dark:border-t-blue-500 rounded-full animate-spin" />
         </div>
       </div>
     );
