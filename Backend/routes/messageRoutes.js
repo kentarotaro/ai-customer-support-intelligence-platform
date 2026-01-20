@@ -11,13 +11,13 @@ const { body } = require('express-validator');
 const messageValidation = [
   body('content')
     .notEmpty().withMessage('Isi pesan wajib diisi')
-    .isLength({ min: 10 }).withMessage('Pesan minimal 10 karakter')
+    .isLength({ min: 1 }).withMessage('Pesan minimal 10 karakter')
     .isLength({ max: 5000 }).withMessage('Pesan maksimal 5000 karakter')
     .trim(),
   
   body('customer_name')
     .notEmpty().withMessage('Nama customer wajib diisi')
-    .isLength({ min: 2 }).withMessage('Nama minimal 2 karakter')
+    .isLength({ min: 1 }).withMessage('Nama minimal 2 karakter')
     .isLength({ max: 255 }).withMessage('Nama maksimal 255 karakter')
     .trim(),
   
@@ -30,16 +30,16 @@ const messageValidation = [
 const replyValidation = [
   body('reply_content')
     .notEmpty().withMessage('Isi balasan wajib diisi')
-    .isLength({ min: 10 }).withMessage('Balasan minimal 10 karakter')
-    .isLength({ max: 3000 }).withMessage('Balasan maksimal 3000 karakter')
+    .isLength({ min: 1 }).withMessage('Balasan minimal 10 karakter')
+    .isLength({ max: 5000 }).withMessage('Balasan maksimal 3000 karakter')
     .trim()
 ];
 
 const editReplyValidation = [
   body('reply_content')
     .notEmpty().withMessage('Isi balasan wajib diisi')
-    .isLength({ min: 10 }).withMessage('Balasan minimal 10 karakter')
-    .isLength({ max: 3000 }).withMessage('Balasan maksimal 3000 karakter')
+    .isLength({ min: 1 }).withMessage('Balasan minimal 10 karakter')
+    .isLength({ max: 5000 }).withMessage('Balasan maksimal 3000 karakter')
     .trim()
 ];
 
