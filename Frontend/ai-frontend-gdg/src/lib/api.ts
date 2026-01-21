@@ -290,11 +290,45 @@ export async function editReply(replyId: number, content: string): Promise<{
  * @returns Promise<AnalyticsOverview> - statistik dashboard
  */
 export async function fetchAnalyticsOverview(): Promise<AnalyticsOverview> {
-  const response = await fetch(`${API_BASE_URL}/api/analytics/overview`, {
+  const response = await fetch(`${API_BASE_URL}/api/dashboard/stats`, {
     headers: getAuthHeaders(),
   });
   
-  return handleResponse<AnalyticsOverview>(response);
+  const result = await handleResponse<{ 
+    success: boolean; 
+    timestamp: string; 
+    data: {
+      total_tickets: number;
+      status_breakdown: { open: number; in_progress: number; resolved: number };
+      sentiment_stats: { positive: number; neutral: number; negative: number };
+      priority_stats: { high: number; medium: number; low: number };
+    }
+  }>(response);
+  
+  // transform backend data ke format frontend
+  return {
+    total: result.data.total_tickets,
+    by_status: {
+      Open: result.data.status_breakdown.open,
+      Closed: result.data.status_breakdown.resolved
+    },
+    by_sentiment: {
+      Positive: result.data.sentiment_stats.positive,
+      Neutral: result.data.sentiment_stats.neutral,
+      Negative: result.data.sentiment_stats.negative
+    },
+    by_priority: {
+      High: result.data.priority_stats.high,
+      Medium: result.data.priority_stats.medium,
+      Low: result.data.priority_stats.low
+    },
+    by_category: {
+      Billing: 0,
+      Technical: 0,
+      Inquiry: 0,
+      General: 0
+    }
+  };
 }
 
 // ============================================================================
