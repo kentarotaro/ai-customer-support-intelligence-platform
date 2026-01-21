@@ -71,8 +71,8 @@ export default function RegisterPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-950">
-        <div className="w-8 h-8 border-2 border-gray-900 dark:border-white border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-zinc-950">
+        <div className="w-8 h-8 border-2 border-zinc-900 dark:border-white border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -80,62 +80,57 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex">
       {/* sebelah kiri - brandingnya */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] bg-gradient-to-br from-gray-950 via-gray-900 to-gray-850 p-12 xl:p-16 flex-col justify-between relative overflow-hidden">
-        {/* hiasan backgroundnya */}
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-20 right-10 w-72 h-72 bg-green-500/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 left-10 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl" />
-        </div>
+      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] bg-zinc-900 dark:bg-zinc-900 p-12 xl:p-16 flex-col justify-between relative border-r border-zinc-800 dark:border-zinc-700">
         
-        {/* logo */}
-        <div className="flex items-center gap-3 relative z-10">
-          <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-lg">
-            <FiShoppingBag className="w-6 h-6 text-gray-900" />
+        {/* logo - dengan bg biru supaya keliatan di dark mode */}
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+            <FiShoppingBag className="w-6 h-6 text-white" />
           </div>
           <span className="text-xl font-bold text-white tracking-tight">Tumbas</span>
         </div>
         
         {/* konten utama */}
-        <div className="space-y-6 relative z-10">
+        <div className="space-y-6">
           <h1 className="text-4xl xl:text-5xl 2xl:text-6xl font-bold text-white leading-tight tracking-tight">
             Buat akun dengan <br />mudah<br /> hari ini
           </h1>
-          <p className="text-lg text-gray-400 max-w-md leading-relaxed">
+          <p className="text-lg text-zinc-400 max-w-md leading-relaxed">
             Buat pekerjaan menjadi lebih mudah.
           </p>
           
-          {/* angka-angka statistiknya */}
+          {/* angka-angka statistiknya - dengan subtle blue accent */}
           <div className="grid grid-cols-2 gap-6 pt-4">
-            <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10">
+            <div className="bg-blue-600/10 rounded-lg p-4 border border-blue-500/20">
               <p className="text-3xl font-bold text-white">12k+</p>
-              <p className="text-sm text-gray-400">Support agents</p>
+              <p className="text-sm text-blue-300">Support agents</p>
             </div>
-            <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10">
+            <div className="bg-blue-600/10 rounded-lg p-4 border border-blue-500/20">
               <p className="text-3xl font-bold text-white">999+</p>
-              <p className="text-sm text-gray-400">Happy Customers</p>
+              <p className="text-sm text-blue-300">Happy Customers</p>
             </div>
           </div>
         </div>
         
         {/* footer */}
-        <p className="text-gray-600 text-sm relative z-10">© 2026 Tumbas. All rights reserved.</p>
+        <p className="text-zinc-600 text-sm">© 2026 Tumbas. All rights reserved.</p>
       </div>
       
       {/* sebelah kanan - form pendaftaran */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 sm:px-12 bg-white dark:bg-gray-950 overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center px-6 py-12 sm:px-12 bg-white dark:bg-zinc-950 overflow-y-auto border-l-0 lg:border-l lg:border-zinc-200 dark:lg:border-zinc-700">
         <div className="w-full max-w-sm">
           {/* logo versi tampilan mobile */}
           <div className="lg:hidden flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 bg-gray-900 dark:bg-white rounded-lg flex items-center justify-center">
-              <FiShoppingBag className="w-5 h-5 text-white dark:text-gray-900" />
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+              <FiShoppingBag className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-semibold text-gray-900 dark:text-white">Tumbas</span>
+            <span className="text-xl font-semibold text-zinc-900 dark:text-white">Tumbas</span>
           </div>
           
           {/* judulnya */}
           <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Create account</h2>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">Join the support team</p>
+            <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white">Create account</h2>
+            <p className="text-zinc-500 dark:text-zinc-400 mt-2">Join the support team</p>
           </div>
           
           {/* pesan error */}
@@ -332,15 +327,15 @@ export default function RegisterPage() {
               )}
             </div>
             
-            {/* tombol daftar */}
+            {/* tombol daftar - solid blue accent color */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3.5 mt-7 bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-white dark:text-gray-900 font-semibold text-sm rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
+              className="w-full py-3.5 mt-7 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
             >
               {isLoading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white dark:border-gray-900 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>Creating account...</span>
                 </>
               ) : (

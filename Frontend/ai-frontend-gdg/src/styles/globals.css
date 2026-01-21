@@ -22,42 +22,42 @@
    ============================================================================ */
 
 :root {
-  /* Page Background - Clean white like Gmail */
+  /* Page Background - Clean white, no fancy stuff */
   --color-bg-page: #ffffff;
   --color-bg-surface: #ffffff;
   --color-bg-elevated: #ffffff;
-  --color-bg-subtle: #f8fafc;
-  --color-bg-muted: #f1f5f9;
+  --color-bg-subtle: #fafafa;         /* zinc-50 */
+  --color-bg-muted: #f4f4f5;          /* zinc-100 */
   
-  /* Text Colors - WCAG AA compliant 4.5:1 contrast ratio minimum */
-  --color-text-primary: #0f172a;      /* slate-900 - very dark for best readability */
-  --color-text-secondary: #334155;    /* slate-700 - 7:1 contrast ratio */
-  --color-text-tertiary: #475569;     /* slate-600 - 5.5:1 contrast */
-  --color-text-muted: #64748b;        /* slate-500 - 4.5:1 minimum */
+  /* Text Colors - zinc scale for clean, neutral look */
+  --color-text-primary: #18181b;      /* zinc-900 */
+  --color-text-secondary: #3f3f46;    /* zinc-700 */
+  --color-text-tertiary: #52525b;     /* zinc-600 */
+  --color-text-muted: #71717a;        /* zinc-500 */
   --color-text-inverse: #ffffff;
   
-  /* Border Colors - Slightly stronger for visibility */
-  --color-border-default: #e2e8f0;    /* slate-200 */
-  --color-border-subtle: #f1f5f9;     /* slate-100 */
-  --color-border-strong: #cbd5e1;     /* slate-300 */
+  /* Border Colors - subtle zinc borders */
+  --color-border-default: #e4e4e7;    /* zinc-200 */
+  --color-border-subtle: #f4f4f5;     /* zinc-100 */
+  --color-border-strong: #d4d4d8;     /* zinc-300 */
   
-  /* Interactive Colors - Blue with good contrast */
-  --color-primary: #2563eb;           /* blue-600 - better contrast */
+  /* Accent - Single flat blue, no gradients */
+  --color-primary: #2563eb;           /* blue-600 */
   --color-primary-hover: #1d4ed8;     /* blue-700 */
   --color-primary-light: #eff6ff;     /* blue-50 */
   
-  /* Status Colors - WCAG compliant */
+  /* Status Colors - flat, solid colors */
   --color-success: #16a34a;           /* green-600 */
   --color-success-bg: #f0fdf4;        /* green-50 */
-  --color-warning: #ca8a04;           /* yellow-600 - darker for contrast */
+  --color-warning: #ca8a04;           /* yellow-600 */
   --color-warning-bg: #fefce8;        /* yellow-50 */
   --color-error: #dc2626;             /* red-600 */
   --color-error-bg: #fef2f2;          /* red-50 */
   
-  /* Shadows - Subtle, refined shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05), 0 1px 3px 0 rgba(15, 23, 42, 0.08);
-  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.1), 0 2px 4px -2px rgba(15, 23, 42, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -4px rgba(15, 23, 42, 0.1);
+  /* Shadows - very subtle, almost invisible */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 1px 3px 0 rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
   
   color-scheme: light;
 }
@@ -67,37 +67,37 @@
    ============================================================================ */
 
 .dark {
-  /* Page Background - Dark surfaces */
-  --color-bg-page: #1f1f1f;
-  --color-bg-surface: #2d2d2d;
-  --color-bg-elevated: #3c3c3c;
-  --color-bg-subtle: #353535;
-  --color-bg-muted: #404040;
+  /* Page Background - slightly lighter for better contrast differentiation */
+  --color-bg-page: #0a0a0b;           /* slightly lighter than pure zinc-950 */
+  --color-bg-surface: #141417;        /* between zinc-900 and zinc-950 */
+  --color-bg-elevated: #1c1c21;       /* lighter surface for cards/panels */
+  --color-bg-subtle: #18181b;         /* zinc-900 */
+  --color-bg-muted: #27272a;          /* zinc-800 */
   
-  /* Text Colors - High contrast for dark backgrounds */
-  --color-text-primary: #e8eaed;      /* Light text on dark */
-  --color-text-secondary: #bdc1c6;
-  --color-text-tertiary: #9aa0a6;
-  --color-text-muted: #6e7377;
-  --color-text-inverse: #202124;
+  /* Text Colors - improved contrast */
+  --color-text-primary: #fafafa;      /* zinc-50 */
+  --color-text-secondary: #e4e4e7;    /* zinc-200 - brighter for readability */
+  --color-text-tertiary: #a1a1aa;     /* zinc-400 */
+  --color-text-muted: #71717a;        /* zinc-500 */
+  --color-text-inverse: #09090b;      /* zinc-950 */
   
-  /* Border Colors */
-  --color-border-default: #3c4043;
-  --color-border-subtle: #353535;
-  --color-border-strong: #5f6368;
+  /* Border Colors - MORE VISIBLE borders for dark mode */
+  --color-border-default: #3f3f46;    /* zinc-700 - MORE visible */
+  --color-border-subtle: #27272a;     /* zinc-800 */
+  --color-border-strong: #52525b;     /* zinc-600 - even more visible */
   
-  /* Interactive Colors - Brighter for dark mode */
-  --color-primary: #8ab4f8;
-  --color-primary-hover: #aecbfa;
-  --color-primary-light: rgba(138, 180, 248, 0.15);
+  /* Accent - same blue, slightly brighter for dark */
+  --color-primary: #3b82f6;           /* blue-500 */
+  --color-primary-hover: #60a5fa;     /* blue-400 */
+  --color-primary-light: rgba(59, 130, 246, 0.1);
   
-  /* Status Colors - Adjusted for dark mode */
-  --color-success: #81c995;
-  --color-success-bg: rgba(129, 201, 149, 0.15);
-  --color-warning: #fdd663;
-  --color-warning-bg: rgba(253, 214, 99, 0.15);
-  --color-error: #f28b82;
-  --color-error-bg: rgba(242, 139, 130, 0.15);
+  /* Status Colors - slightly muted for dark mode */
+  --color-success: #22c55e;           /* green-500 */
+  --color-success-bg: rgba(34, 197, 94, 0.1);
+  --color-warning: #eab308;           /* yellow-500 */
+  --color-warning-bg: rgba(234, 179, 8, 0.1);
+  --color-error: #ef4444;             /* red-500 */
+  --color-error-bg: rgba(239, 68, 68, 0.1);
   
   /* Shadows - Darker for dark mode */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3), 0 1px 3px 1px rgba(0, 0, 0, 0.15);

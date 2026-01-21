@@ -4,64 +4,63 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Message, AISummary, AIResponseSuggestion } from '@/types';
-import { fetchMessageById, fetchAISummary, fetchAIResponseSuggestion, sendReply, markAsRead, deleteMessage, archiveMessage, editReply } from '@/lib/api';
+import { fetchMessageById, fetchAISummary, fetchAIResponseSuggestion, sendReply, markAsRead, deleteMessage, editReply } from '@/lib/api';
 
 // ============================================================================
-// KONFIGURASI TAG PRIORITAS - ada indikator titiknya
+// KONFIGURASI TAG PRIORITAS - design lebih kreatif dan humanlike
 // ============================================================================
 const PRIORITY_CONFIG = {
   Urgent: {
-    label: 'Urgent',
-    bgColor: 'bg-red-50 dark:bg-red-950/50',
-    textColor: 'text-red-700 dark:text-red-400',
-    borderColor: 'border-red-200 dark:border-red-800',
-    dotColor: 'bg-red-500',
+    label: '🔴 Urgent',
+    bgColor: 'bg-rose-100 dark:bg-rose-900/30',
+    textColor: 'text-rose-800 dark:text-rose-300',
+    borderColor: 'border-rose-300 dark:border-rose-700',
     description: 'Requires immediate attention'
   },
   High: {
-    label: 'High',
-    bgColor: 'bg-orange-50 dark:bg-orange-950/50',
-    textColor: 'text-orange-700 dark:text-orange-400',
-    borderColor: 'border-orange-200 dark:border-orange-800',
-    dotColor: 'bg-orange-500',
+    label: '🟠 High',
+    bgColor: 'bg-amber-100 dark:bg-amber-900/30',
+    textColor: 'text-amber-800 dark:text-amber-300',
+    borderColor: 'border-amber-300 dark:border-amber-700',
     description: 'High priority - address soon'
   },
   Medium: {
-    label: 'Medium',
-    bgColor: 'bg-yellow-50 dark:bg-yellow-950/50',
-    textColor: 'text-yellow-700 dark:text-yellow-500',
-    borderColor: 'border-yellow-200 dark:border-yellow-800',
-    dotColor: 'bg-yellow-500',
+    label: '🟡 Medium',
+    bgColor: 'bg-sky-100 dark:bg-sky-900/30',
+    textColor: 'text-sky-800 dark:text-sky-300',
+    borderColor: 'border-sky-300 dark:border-sky-700',
     description: 'Normal priority'
   },
   Low: {
-    label: 'Low',
-    bgColor: 'bg-green-50 dark:bg-green-950/50',
-    textColor: 'text-green-700 dark:text-green-400',
-    borderColor: 'border-green-200 dark:border-green-800',
-    dotColor: 'bg-green-500',
+    label: '🟢 Low',
+    bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
+    textColor: 'text-emerald-800 dark:text-emerald-300',
+    borderColor: 'border-emerald-300 dark:border-emerald-700',
     description: 'Low priority - handle when available'
   }
 } as const;
 
 // ============================================================================
-// KONFIGURASI TAG STATUS
+// KONFIGURASI TAG STATUS - lebih simple dan natural
 // ============================================================================
 const STATUS_CONFIG = {
   Open: {
-    bgColor: 'bg-blue-50 dark:bg-blue-950/50',
-    textColor: 'text-blue-700 dark:text-blue-400',
-    borderColor: 'border-blue-200 dark:border-blue-800'
+    label: '📬 Open',
+    bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
+    textColor: 'text-indigo-800 dark:text-indigo-300',
+    borderColor: 'border-indigo-300 dark:border-indigo-700'
   },
   'In Progress': {
-    bgColor: 'bg-purple-50 dark:bg-purple-950/50',
-    textColor: 'text-purple-700 dark:text-purple-400',
-    borderColor: 'border-purple-200 dark:border-purple-800'
+    label: '⏳ In Progress',
+    bgColor: 'bg-violet-100 dark:bg-violet-900/30',
+    textColor: 'text-violet-800 dark:text-violet-300',
+    borderColor: 'border-violet-300 dark:border-violet-700'
   },
   Closed: {
-    bgColor: 'bg-gray-100 dark:bg-gray-800',
-    textColor: 'text-gray-600 dark:text-gray-400',
-    borderColor: 'border-gray-200 dark:border-gray-700'
+    label: '✅ Closed',
+    bgColor: 'bg-slate-100 dark:bg-slate-800/50',
+    textColor: 'text-slate-700 dark:text-slate-300',
+    borderColor: 'border-slate-300 dark:border-slate-600'
   }
 } as const;
 
@@ -242,14 +241,6 @@ const ArrowLeftIcon = () => (
   </svg>
 );
 
-const ArchiveIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="21 8 21 21 3 21 3 8"/>
-    <rect x="1" y="3" width="22" height="5"/>
-    <line x1="10" y1="12" x2="14" y2="12"/>
-  </svg>
-);
-
 const TrashIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="3 6 5 6 21 6"/>
@@ -281,12 +272,6 @@ const EditIcon = () => (
 const MoreIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
-  </svg>
-);
-
-const StarIcon = ({ filled = false }: { filled?: boolean }) => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? '#f59e0b' : 'none'} stroke={filled ? '#f59e0b' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
   </svg>
 );
 
@@ -360,35 +345,32 @@ function formatFullDate(dateString: string): string {
 }
 
 // ============================================================================
-// KOMPONEN TAG PRIORITAS
+// KOMPONEN TAG PRIORITAS - simple dan humanlike
 // ============================================================================
 function PriorityTag({ priority }: { priority: string }) {
   const config = PRIORITY_CONFIG[priority as keyof typeof PRIORITY_CONFIG] || PRIORITY_CONFIG.Medium;
   
   return (
     <span
-      className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md border ${config.bgColor} ${config.textColor} ${config.borderColor}`}
+      className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${config.bgColor} ${config.textColor} border ${config.borderColor}`}
       title={config.description}
     >
-      <span className={`w-2 h-2 rounded-full ${config.dotColor}`} />
-      <span>{config.label}</span>
+      {config.label}
     </span>
   );
 }
 
 // ============================================================================
-// KOMPONEN TAG STATUS
+// KOMPONEN TAG STATUS - simple dan readable
 // ============================================================================
 function StatusTag({ status }: { status: string }) {
   const config = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.Open;
-  const dotColor = status === 'Closed' ? 'bg-green-500' : status === 'In Progress' ? 'bg-blue-500' : 'bg-amber-500';
   
   return (
     <span
-      className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md border ${config.bgColor} ${config.textColor} ${config.borderColor}`}
+      className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${config.bgColor} ${config.textColor} border ${config.borderColor}`}
     >
-      <span className={`w-2 h-2 rounded-full ${dotColor}`} />
-      {status}
+      {config.label}
     </span>
   );
 }
@@ -424,7 +406,7 @@ function ReplyComposer({
   };
   
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden">
+    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-sm overflow-hidden">
       {/* bagian header */}
       <div className="flex items-center justify-between px-6 py-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-3">
@@ -449,7 +431,7 @@ function ReplyComposer({
         <div className="flex items-center gap-3">
           <span className="text-base text-gray-500 dark:text-gray-400">To:</span>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-medium">
               {recipientName.charAt(0).toUpperCase()}
             </div>
             <div>
@@ -462,7 +444,7 @@ function ReplyComposer({
       
       {/* saran AI */}
       {suggestion && showSuggestion && (
-        <div className="px-6 py-5 bg-linear-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 border-b border-blue-100 dark:border-blue-900/50">
+        <div className="px-6 py-5 bg-blue-50 dark:bg-blue-950/30 border-b border-blue-100 dark:border-blue-900/50">
           <div className="flex items-start gap-4">
             <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg text-blue-600 dark:text-blue-400 shrink-0">
               <SparklesIcon />
@@ -514,12 +496,11 @@ function ReplyComposer({
             className="
               flex items-center gap-2 px-6 py-3 
               text-base font-semibold
-              bg-gradient-to-r from-blue-600 to-blue-700 
-              hover:from-blue-700 hover:to-blue-800
-              rounded-md shadow-md shadow-blue-500/25
-              hover:shadow-lg hover:shadow-blue-500/30
+              bg-blue-600 
+              hover:bg-blue-700
+              rounded-md
               disabled:opacity-50 disabled:cursor-not-allowed
-              transition-all duration-200
+              transition-colors
               focus-ring
             "
             style={{ color: 'white' }}
@@ -565,7 +546,6 @@ function MessageBubble({
   replyId?: number;
 }) {
   const isSupport = message.sender === 'support';
-  const [isStarred, setIsStarred] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   
   // Close menu when clicking outside
@@ -588,7 +568,7 @@ function MessageBubble({
         className="w-full flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-left focus-ring"
       >
         {/* Avatar */}
-        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0 shadow-md ${isSupport ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-blue-500 to-purple-600'}`}>
+        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0 ${isSupport ? 'bg-emerald-600' : 'bg-blue-600'}`}>
           {isSupport ? 'CS' : customerName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
         </div>
         
@@ -620,15 +600,6 @@ function MessageBubble({
           <time className="hidden sm:inline text-xs text-gray-500 dark:text-gray-400">
             {formatFullDate(message.timestamp)}
           </time>
-          <span 
-            onClick={(e) => { e.stopPropagation(); setIsStarred(!isStarred); }} 
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setIsStarred(!isStarred); } }}
-            className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
-          >
-            <StarIcon filled={isStarred} />
-          </span>
           {isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
         </div>
       </div>
@@ -674,13 +645,6 @@ function MessageBubble({
                       <span>Edit Reply</span>
                     </button>
                   )}
-                  <button
-                    onClick={() => setShowMenu(false)}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <StarIcon filled={false} />
-                    <span>{isStarred ? 'Unstar' : 'Star'}</span>
-                  </button>
                 </div>
               )}
             </div>
@@ -706,9 +670,7 @@ export default function MessageDetailPage() {
   const [isSending, setIsSending] = useState(false);
   const [expandedMessages, setExpandedMessages] = useState<Set<number>>(new Set());
   const [showReply, setShowReply] = useState(false);
-  const [isStarred, setIsStarred] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isArchiving, setIsArchiving] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   
   // Edit reply state
@@ -786,20 +748,6 @@ export default function MessageDetailPage() {
       showNotification('error', 'Failed to delete message');
     } finally {
       setIsDeleting(false);
-    }
-  };
-  
-  const handleArchiveMessage = async () => {
-    setIsArchiving(true);
-    try {
-      await archiveMessage(messageId);
-      showNotification('success', 'Message archived successfully');
-      setTimeout(() => router.push('/'), 1000);
-    } catch (error) {
-      console.error('Failed to archive message:', error);
-      showNotification('error', 'Failed to archive message');
-    } finally {
-      setIsArchiving(false);
     }
   };
   
@@ -951,17 +899,17 @@ export default function MessageDetailPage() {
   // kalo pesannya ga ketemu
   if (!message) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col items-center justify-center gap-6">
-        <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400">
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center gap-6">
+        <div className="w-24 h-24 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
           <InboxIcon />
         </div>
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Message not found</h1>
-          <p className="text-base text-gray-500 dark:text-gray-400">The message you are looking for does not exist or has been deleted.</p>
+          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-2">Message not found</h1>
+          <p className="text-base text-zinc-500 dark:text-zinc-400">The message you are looking for does not exist or has been deleted.</p>
         </div>
         <Link 
           href="/" 
-          className="px-6 py-3 text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-md transition-colors focus-ring"
+          className="px-6 py-3 text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors focus-ring"
         >
           Return to Inbox
         </Link>
@@ -973,11 +921,11 @@ export default function MessageDetailPage() {
   const sentimentConfig = SENTIMENT_CONFIG[sentimentKey];
   
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       {/* Notification Toast */}
       {notification && (
         <div className={`
-          fixed top-6 right-6 z-50 px-6 py-4 rounded-lg shadow-lg border
+          fixed top-6 right-6 z-50 px-6 py-4 rounded-lg shadow-sm border
           animate-fade-in-up
           ${notification.type === 'success' 
             ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200' 
@@ -1008,18 +956,6 @@ export default function MessageDetailPage() {
           
           {/* Actions - proper spacing to prevent overlap */}
           <div className="flex items-center gap-1 sm:gap-2">
-            <button 
-              onClick={handleArchiveMessage}
-              disabled={isArchiving}
-              className="p-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors focus-ring disabled:opacity-50"
-              title="Archive"
-            >
-              {isArchiving ? (
-                <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <ArchiveIcon />
-              )}
-            </button>
             <button 
               onClick={handleDeleteMessage}
               disabled={isDeleting}
@@ -1087,17 +1023,6 @@ export default function MessageDetailPage() {
                     {message.sentiment}
                   </span>
                 )}
-                
-                {/* Spacer */}
-                <div className="flex-1" />
-                
-                {/* Star */}
-                <button
-                  onClick={() => setIsStarred(!isStarred)}
-                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-ring"
-                >
-                  <StarIcon filled={isStarred} />
-                </button>
               </div>
             </div>
           </div>
@@ -1183,20 +1108,18 @@ export default function MessageDetailPage() {
           
           {/* Reply Area */}
           {!showReply ? (
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md border border-gray-300 dark:border-gray-700 p-5 sm:p-6">
+            <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700 p-5 sm:p-6">
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => setShowReply(true)}
                   className="
                     flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3
                     text-sm font-bold text-white
-                    bg-gradient-to-r from-blue-600 to-indigo-600
-                    hover:from-blue-700 hover:to-indigo-700
-                    rounded-lg shadow-lg shadow-blue-500/30
-                    hover:shadow-xl hover:shadow-blue-500/40
-                    transition-all duration-200
+                    bg-blue-600
+                    hover:bg-blue-700
+                    rounded-lg
+                    transition-colors
                     focus-ring
-                    border border-blue-700
                   "
                 >
                   <ReplyIcon />
@@ -1285,10 +1208,10 @@ export default function MessageDetailPage() {
             )}
             
             {/* Customer Info Card */}
-            <div className="mt-4 bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-              <h3 className="font-semibold text-sm text-gray-900 dark:text-white mb-3">Customer</h3>
+            <div className="mt-4 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700 p-4">
+              <h3 className="font-semibold text-sm text-zinc-900 dark:text-white mb-3">Customer</h3>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-base font-semibold shadow-md">
+                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-base font-semibold">
                   {message.customer_name.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
