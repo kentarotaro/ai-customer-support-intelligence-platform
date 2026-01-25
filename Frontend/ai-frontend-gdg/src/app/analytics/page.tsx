@@ -289,7 +289,7 @@ function AnalyticsPageContent() {
               </div>
             </div>
 
-            {/* performa AI tanpa warna gradien ribet */}
+            {/* performa AI*/}
             <div className="bg-white dark:bg-zinc-900 rounded-lg border-2 border-blue-200 dark:border-blue-900/50 p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">

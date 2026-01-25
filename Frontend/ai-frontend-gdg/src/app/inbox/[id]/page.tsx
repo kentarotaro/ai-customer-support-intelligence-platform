@@ -7,7 +7,7 @@ import { Message, AISummary, AIResponseSuggestion } from '@/types';
 import { fetchMessageById, fetchAISummary, fetchAIResponseSuggestion, sendReply, markAsRead, deleteMessage, editReply } from '@/lib/api';
 
 // ============================================================================
-// KONFIGURASI TAG PRIORITAS - design lebih kreatif dan humanlike
+// KONFIGURASI TAG PRIORITAS 
 // ============================================================================
 const PRIORITY_CONFIG = {
   Urgent: {

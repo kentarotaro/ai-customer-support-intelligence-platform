@@ -131,6 +131,13 @@ export interface AISummary {
 /**
  * saran balasan yang di-generate AI
  */
+
+export interface AgentLists {
+  id?: string;
+  full_name?: string;
+  role?: string;
+}
+
 export interface AIResponseSuggestion {
   messageId?: number;
   suggestion: string;

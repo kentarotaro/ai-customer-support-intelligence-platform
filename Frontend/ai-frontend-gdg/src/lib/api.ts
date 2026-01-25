@@ -280,6 +280,14 @@ export async function editReply(replyId: number, content: string): Promise<{
   
   return handleResponse(response);
 }
+/** ENDPOINT UNTUK FETCH AGENTS */
+
+export async function fetchAgentsList(): Promise<{ id: string; full_name: string; role: string }[]> {
+  const response = await fetch(`${API_BASE_URL}/api/messages/agents/list`, {
+    headers: getAuthHeaders(),
+  });
+  return handleResponse(response);
+}
 
 // ============================================================================
 // ENDPOINT ANALYTICS (Dilindungi, Khusus Lead)

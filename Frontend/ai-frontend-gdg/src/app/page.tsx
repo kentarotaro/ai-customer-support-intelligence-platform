@@ -9,7 +9,8 @@ import { useAuth } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { 
   HiOutlineLogout,
-  HiOutlineChartBar
+  HiOutlineChartBar,
+  HiOutlineUsers
 } from 'react-icons/hi';
 import { 
   FiSmile,
@@ -267,8 +268,14 @@ const TrashIcon = () => (
 
 // ============================================================================
 // fungsi-fungsi bantuan buat berbagai keperluan
+// FIXED: tambah parameter isMounted buat prevent hydration error
 // ============================================================================
-function formatDate(dateString: string): string {
+function formatDate(dateString: string, isMounted: boolean): string {
+  // prevent hydration mismatch - return placeholder kalo belum mounted
+  if (!isMounted) {
+    return '...';
+  }
+  
   const date = new Date(dateString);
   const now = new Date();
   const isToday = date.toDateString() === now.toDateString();
@@ -321,13 +328,15 @@ function StatusTag({ status }: { status: keyof typeof STATUS_CONFIG }) {
 
 // ============================================================================
 // komponen kartu pesan - design nya oke banget deh
+// FIXED: tambah prop isMounted
 // ============================================================================
-function MessageCard({ message, isSelected, onSelect, onDelete, selectMode }: { 
+function MessageCard({ message, isSelected, onSelect, onDelete, selectMode, isMounted }: { 
   message: Message; 
   isSelected: boolean;
   onSelect: (id: number) => void;
   onDelete: (id: number) => void;
   selectMode: boolean;
+  isMounted: boolean;
 }) {
   const router = useRouter();
   const priorityKey = message.priority as keyof typeof PRIORITY_CONFIG;
@@ -349,6 +358,7 @@ function MessageCard({ message, isSelected, onSelect, onDelete, selectMode }: {
         hover:bg-gray-100/80 dark:hover:bg-zinc-800
       `}
       onClick={() => router.push(`/inbox/${message.id}`)}
+      suppressHydrationWarning
     >
       {/* baris paling atas - checkbox terus isi kontennya */}
       <div className="flex items-start gap-3 sm:gap-4">
@@ -385,8 +395,9 @@ function MessageCard({ message, isSelected, onSelect, onDelete, selectMode }: {
             <time 
               className={`text-sm shrink-0 ${!message.isRead ? 'font-medium text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
               dateTime={message.created_at}
+              suppressHydrationWarning
             >
-              {formatDate(message.created_at)}
+              {formatDate(message.created_at, isMounted)}
             </time>
           </div>
           
@@ -438,6 +449,7 @@ function MessageCard({ message, isSelected, onSelect, onDelete, selectMode }: {
 
 // ============================================================================
 // komponen sidebar - biar rapi dan enak diliatnya
+// FIXED: tambah mounted state buat prevent hydration
 // ============================================================================
 function Sidebar({ 
   isOpen, 
@@ -458,20 +470,27 @@ function Sidebar({
   user: { full_name: string; email: string; role: 'agent' | 'lead' } | null;
   onLogout: () => void;
 }) {
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   
   return (
     <>
       {isOpen && <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={onClose} />}
       
-      <aside className={`
-        fixed top-0 left-0 z-50 h-full w-64 pt-16
-        bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800
-        transform transition-transform duration-300 ease-out
-        lg:translate-x-0 lg:static lg:z-auto lg:pt-4
-        ${isOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full'}
-      `}>
-        {/* bagian profil user nya */}
-        {user && (
+      <aside 
+        className={`
+          fixed top-0 left-0 z-50 h-full w-64 pt-16
+          bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800
+          transform transition-transform duration-300 ease-out
+          lg:translate-x-0 lg:static lg:z-auto lg:pt-4
+          ${isOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full'}
+        `}
+      >
+        {/* bagian profil user nya - render setelah mounted */}
+        {isMounted && user && (
           <div className="px-4 py-4 border-b border-gray-100 dark:border-gray-800">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
@@ -541,7 +560,7 @@ function Sidebar({
           </button>
           
           {/* analytics - cuma buat lead doang */}
-          {user?.role === 'lead' && (
+          {isMounted && user?.role === 'lead' && (
             <Link
               href="/analytics"
               className="
@@ -554,6 +573,23 @@ function Sidebar({
             >
               <HiOutlineChartBar className="w-5 h-5" />
               <span>Analytics</span>
+            </Link>
+          )}
+          
+          {/* agents list - cuma buat lead */}
+          {isMounted && user?.role === 'lead' && (
+            <Link
+              href="/agentslist"
+              className="
+                flex items-center gap-3.5 px-4 py-3.5 rounded-lg
+                text-gray-700 dark:text-gray-300
+                hover:bg-gray-100 dark:hover:bg-gray-800
+                transition-all text-base font-medium
+                focus-ring
+              "
+            >
+              <HiOutlineUsers className="w-5 h-5" />
+              <span>Agents List</span>
             </Link>
           )}
           
@@ -609,6 +645,7 @@ function Sidebar({
 
 // ============================================================================
 // halaman utama inbox kita nih
+// FIXED: skip render sampe mounted buat prevent hydration error
 // ============================================================================
 function InboxPageContent() {
   const router = useRouter();
@@ -625,8 +662,6 @@ function InboxPageContent() {
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   
   // pisahin pesan berdasarkan udah dibalas apa belum
-  // inbox = pesan yang belum ada balasannya (statusnya masih 'Open')
-  // sent = pesan yang udah dibalas (statusnya jadi 'In Progress' atau 'Closed')
   const inboxMessages = allMessages.filter(m => m.status === 'Open');
   const sentMessages = allMessages.filter(m => m.status !== 'Open');
   
@@ -676,8 +711,6 @@ function InboxPageContent() {
   };
   
   const unreadCount = inboxMessages.filter(m => !m.isRead).length;
-  
-  // tampilin inbox atau sent tergantung lagi mode apa sekarang
   const currentMessages = viewMode === 'sent' ? sentMessages : inboxMessages;
   
   const filteredMessages = currentMessages.filter(m => {
@@ -707,21 +740,16 @@ function InboxPageContent() {
       console.log('🔄 Fetching messages from backend...');
       const data = await fetchMessages();
       console.log('✅ Got messages from backend:', data.length);
-      // sesuain data dari backend biar cocok sama frontend
       const enhanced = data.map((msg: Message) => ({
         ...msg,
-        // pake content buat preview kalo emang ga ada preview nya
         preview: msg.preview || msg.content?.substring(0, 150) || '',
-        // bikin isRead jadi false secara default buat pesan baru
         isRead: msg.isRead ?? false,
-        // isi default buat yang opsional
         priority: msg.priority || 'Medium',
         category: msg.category || 'General',
         sentiment: msg.sentiment || 'Neutral'
       }));
       setAllMessages(enhanced as Message[]);
     } catch (error) {
-      // backend nya lagi down, pake data dummy dulu deh
       console.error('❌ Backend error:', error);
       console.warn('Using mock data as fallback');
       setAllMessages(MOCK_MESSAGES);
@@ -734,11 +762,11 @@ function InboxPageContent() {
     setHasMounted(true);
     loadMessages();
   }, [loadMessages]);
-  
-  // cegah hydration error biar render nya konsisten
+
+  // CRITICAL: Don't render until mounted to prevent hydration mismatch
   if (!hasMounted) {
     return (
-      <div className="flex h-screen bg-gray-50 dark:bg-zinc-950">
+      <div className="flex h-screen bg-gray-50 dark:bg-zinc-950" suppressHydrationWarning>
         <div className="flex-1 flex items-center justify-center">
           <div className="w-10 h-10 border-4 border-gray-300 dark:border-zinc-700 border-t-gray-600 dark:border-t-blue-500 rounded-full animate-spin" />
         </div>
@@ -747,7 +775,7 @@ function InboxPageContent() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-zinc-950">
+    <div className="flex h-screen bg-gray-50 dark:bg-zinc-950" suppressHydrationWarning>
       {/* notifikasi popup kalo ada yang berhasil atau error */}
       {notification && (
         <div className={`
@@ -799,29 +827,6 @@ function InboxPageContent() {
             </div>
           </div>
           
-          {/* tombol buat nyalain mode select */}
-          <button
-            onClick={() => {
-              if (selectMode) {
-                // keluar dari mode select dan hapus semua pilihan
-                setSelectMode(false);
-                setSelectedIds(new Set());
-              } else {
-                // masuk mode select dan pilih semua pesan yang kefilter
-                setSelectMode(true);
-                setSelectedIds(new Set(filteredMessages.map(m => m.id)));
-              }
-            }}
-            className={`p-2.5 rounded-lg transition-colors focus-ring ${
-              selectMode 
-                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' 
-                : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300'
-            }`}
-            title={selectMode ? 'Deselect all & exit' : 'Select all messages'}
-            aria-label={selectMode ? 'Deselect all & exit' : 'Select all messages'}
-          >
-            <CheckboxIcon checked={selectMode} />
-          </button>
 
           {/* pencarian */}
           <div className="flex-1 max-w-xl relative flex items-center">
@@ -857,6 +862,28 @@ function InboxPageContent() {
               </button>
             )}
           </div>
+
+          {/* tombol buat nyalain mode select - sekarang di kanan searchbar */}
+          <button
+            onClick={() => {
+              if (selectMode) {
+                setSelectMode(false);
+                setSelectedIds(new Set());
+              } else {
+                setSelectMode(true);
+                setSelectedIds(new Set(filteredMessages.map(m => m.id)));
+              }
+            }}
+            className={`p-2.5 rounded-lg transition-colors focus-ring ${
+              selectMode 
+                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' 
+                : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300'
+            }`}
+            title={selectMode ? 'Deselect all & exit' : 'Select all messages'}
+            aria-label={selectMode ? 'Deselect all & exit' : 'Select all messages'}
+          >
+            <CheckboxIcon checked={selectMode} />
+          </button>
 
           {/* tombol hapus semua yang dipilih */}
           {selectMode && selectedIds.size > 0 && (
@@ -957,6 +984,7 @@ function InboxPageContent() {
                   onSelect={toggleSelect}
                   onDelete={handleDeleteMessage}
                   selectMode={selectMode}
+                  isMounted={hasMounted}
                 />
               ))}
             </div>
@@ -967,7 +995,7 @@ function InboxPageContent() {
         <footer className="flex items-center justify-between px-4 sm:px-6 py-2 bg-gray-50 dark:bg-zinc-950 border-t border-gray-200 dark:border-gray-800 text-xs text-gray-500 dark:text-gray-400 shrink-0">
           <span className="font-medium">{viewMode === 'sent' ? `${sentMessages.length} sent` : `${unreadCount} unread`}</span>
           <span className="hidden sm:inline">Powered by Gemini AI</span>
-          <span>Last refreshed: just now</span>
+          <span suppressHydrationWarning>Last refreshed: just now</span>
         </footer>
       </div>
     </div>
