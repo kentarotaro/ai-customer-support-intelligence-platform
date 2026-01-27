@@ -12,3 +12,5 @@ Backend/.env
 # OS Junk Files (Windows)
 Thumbs.db
 Desktop.ini
+.vercel
+.env*.local
