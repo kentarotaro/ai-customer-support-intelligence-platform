@@ -1,15 +1,16 @@
-// Backend/index.js
+// File: apps/api/api/index.js
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 
-// Import Routes
-const messageRoutes = require('./routes/messageRoutes');
-const authRoutes = require('./routes/authRoutes');
-const dashboardRoutes = require('./routes/dashboardRoutes');
+// ====== UPDATED IMPORTS (Use ../) ======
+const messageRoutes = require('../routes/messageRoutes');
+const authRoutes = require('../routes/authRoutes');
+const dashboardRoutes = require('../routes/dashboardRoutes');
 
-// Import Middleware
-const { authLimiter, aiLimiter, generalLimiter } = require('./middleware/rateLimiter');
+const { authLimiter, aiLimiter, generalLimiter } = require('../middleware/rateLimiter');
+// =======================================
 
 dotenv.config();
 
@@ -21,14 +22,14 @@ app.use(cors());
 app.use(express.json());
 
 // ====== APPLY RATE LIMITERS ======
-// 1. Global limiter untuk semua routes (100 req/menit)
+// 1. Global limiter
 app.use(generalLimiter);
 
-// 2. Auth limiter untuk login/register (5 req/15 menit)
+// 2. Auth limiter
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
-// 3. AI limiter untuk message creation (50 req/jam)
+// 3. AI limiter
 app.use('/api/messages', aiLimiter);
 
 // ====== ROUTES ======
@@ -41,7 +42,7 @@ app.get('/', (req, res) => {
   res.send('AI Customer Support API is Running...');
 });
 
-// Jalankan Server
+// Jalankan Server (Prevent listening in Vercel)
 if (process.env.NODE_ENV !== 'production') {
   app.listen(port, () => {
     console.log(`Server running on port ${port}`);
