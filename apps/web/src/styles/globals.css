@@ -376,6 +376,16 @@ input:focus, textarea:focus, select:focus {
   50% { opacity: 0.5; }
 }
 
+@layer utilities {
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+}
+
+
 .animate-fade-in {
   animation: fadeIn 200ms ease-out forwards;
 }
