@@ -10,76 +10,78 @@ A comprehensive Gmail-like customer support platform with AI-powered features in
 
 ```
 ai-customer-support-intelligence-platform/
-├── Backend/                          # Backend Server (Node.js + Express)
-│   ├── config/                       # Konfigurasi Koneksi Eksternal
-│   │   ├── gemini.js                 # Setup Google Gemini AI
-│   │   └── supabaseClient.js         # Setup Supabase Database
+├── apps/                           # Aplikasi Utama
+│   ├── api/                        # Backend Server (Node.js + Express)
+│   │   ├── config/                 # Konfigurasi Koneksi Eksternal
+│   │   │   ├── gemini.js          # Setup Google Gemini AI
+│   │   │   └── supabaseClient.js  # Setup Supabase Database
+│   │   │
+│   │   ├── controllers/            # Logika Bisnis (Otak Aplikasi)
+│   │   │   ├── authController.js  # Logic Login/Register/Logout
+│   │   │   ├── dashboardController.js # Logic Statistik & Analytics (BARU)
+│   │   │   └── messageController.js   # Logic Inbox, Reply, & Assign Ticket
+│   │   │
+│   │   ├── middleware/             # Satpam & Filter
+│   │   │   ├── authMiddleware.js  # Cek Token & Role (Agent vs Lead)
+│   │   │   └── rateLimiter.js     # Batasi Spam (Anti-Abuse)
+│   │   │
+│   │   ├── routes/                 # Pintu Masuk URL (API Endpoints)
+│   │   │   ├── authRoutes.js      # /api/auth/...
+│   │   │   ├── dashboardRoutes.js # /api/dashboard/... (BARU)
+│   │   │   └── messageRoutes.js   # /api/messages/...
+│   │   │
+│   │   ├── services/               # Layanan Khusus
+│   │   │   └── aiService.js       # Fungsi untuk ngobrol sama AI
+│   │   │
+│   │   ├── index.js                # File Utama (Server Launcher)
+│   │   ├── package.json            # Daftar Dependencies
+│   │   └── README.md               # Dokumentasi
 │   │
-│   ├── controllers/                  # Logika Bisnis (Otak Aplikasi)
-│   │   ├── authController.js         # Logic Login/Register/Logout
-│   │   ├── dashboardController.js    # Logic Statistik & Analytics (BARU)
-│   │   └── messageController.js      # Logic Inbox, Reply, & Assign Ticket
-│   │
-│   ├── middleware/                   # Satpam & Filter
-│   │   ├── authMiddleware.js         # Cek Token & Role (Agent vs Lead)
-│   │   └── rateLimiter.js            # Batasi Spam (Anti-Abuse)
-│   │
-│   ├── routes/                       # Pintu Masuk URL (API Endpoints)
-│   │   ├── authRoutes.js             # /api/auth/...
-│   │   ├── dashboardRoutes.js        # /api/dashboard/... (BARU)
-│   │   └── messageRoutes.js          # /api/messages/...
-│   │
-│   ├── services/                     # Layanan Khusus
-│   │   └── aiService.js              # Fungsi untuk ngobrol sama AI
-│   │
-│   ├── index.js                      # File Utama (Server Launcher)
-│   ├── package.json                  # Daftar Dependencies
-│   └── README.md                     # Dokumentasi
+│   └── web/                        # Frontend Application (Next.js)
+│       ├── src/
+│       │   ├── app/                # Next.js App Router pages
+│       │   │   ├── layout.tsx     # Root layout with ThemeProvider
+│       │   │   ├── page.tsx       # Main inbox page
+│       │   │   ├── help/
+│       │   │   │   └── page.tsx   # Help & IT Support page
+│       │   │   └── settings/
+│       │   │       └── page.tsx   # Settings page (theme, etc.)
+│       │   │
+│       │   ├── components/         # React components
+│       │   │   ├── icons/
+│       │   │   │   └── Icons.tsx  # SVG icon components
+│       │   │   ├── inbox/
+│       │   │   │   ├── AISummaryPanel.tsx        # AI-generated summary display
+│       │   │   │   ├── AIResponseSuggestion.tsx  # AI response suggestion panel
+│       │   │   │   ├── MessageDetail.tsx         # Full message view
+│       │   │   │   ├── MessageList.tsx           # Inbox message list
+│       │   │   │   └── MessageListItem.tsx       # Individual message row
+│       │   │   ├── layout/
+│       │   │   │   └── Sidebar.tsx # Main navigation sidebar
+│       │   │   └── ui/
+│       │   │       ├── CategoryTag.tsx    # Issue category badge
+│       │   │       ├── LoadingSpinner.tsx # Loading states
+│       │   │       ├── PriorityBadge.tsx  # Priority level badge
+│       │   │       ├── SentimentBadge.tsx # Sentiment indicator
+│       │   │       └── StatusBadge.tsx    # Ticket status badge
+│       │   │
+│       │   ├── context/
+│       │   │   └── ThemeContext.tsx # Dark/light mode context
+│       │   │
+│       │   ├── lib/
+│       │   │   └── api.ts          # API utility functions
+│       │   │
+│       │   ├── styles/
+│       │   │   └── globals.css    # Global styles and Tailwind config
+│       │   │
+│       │   └── types/
+│       │       └── index.ts        # TypeScript type definitions
+│       │
+│       ├── public/                 # Static assets
+│       ├── package.json            # Frontend dependencies
+│       └── tsconfig.json           # TypeScript configuration
 │
-└── Frontend/                         # Next.js frontend application
-    └── ai-frontend-gdg/
-        ├── src/
-        │   ├── app/                  # Next.js App Router pages
-        │   │   ├── layout.tsx        # Root layout with ThemeProvider
-        │   │   ├── page.tsx          # Main inbox page
-        │   │   ├── help/
-        │   │   │   └── page.tsx      # Help & IT Support page
-        │   │   └── settings/
-        │   │       └── page.tsx      # Settings page (theme, etc.)
-        │   │
-        │   ├── components/           # React components
-        │   │   ├── icons/
-        │   │   │   └── Icons.tsx     # SVG icon components
-        │   │   ├── inbox/
-        │   │   │   ├── AISummaryPanel.tsx       # AI-generated summary display
-        │   │   │   ├── AIResponseSuggestion.tsx # AI response suggestion panel
-        │   │   │   ├── MessageDetail.tsx        # Full message view
-        │   │   │   ├── MessageList.tsx          # Inbox message list
-        │   │   │   └── MessageListItem.tsx      # Individual message row
-        │   │   ├── layout/
-        │   │   │   └── Sidebar.tsx   # Main navigation sidebar
-        │   │   └── ui/
-        │   │       ├── CategoryTag.tsx    # Issue category badge
-        │   │       ├── LoadingSpinner.tsx # Loading states
-        │   │       ├── PriorityBadge.tsx  # Priority level badge
-        │   │       ├── SentimentBadge.tsx # Sentiment indicator
-        │   │       └── StatusBadge.tsx    # Ticket status badge
-        │   │
-        │   ├── context/
-        │   │   └── ThemeContext.tsx  # Dark/light mode context
-        │   │
-        │   ├── lib/
-        │   │   └── api.ts            # API utility functions
-        │   │
-        │   ├── styles/
-        │   │   └── globals.css       # Global styles and Tailwind config
-        │   │
-        │   └── types/
-        │       └── index.ts          # TypeScript type definitions
-        │
-        ├── public/                   # Static assets
-        ├── package.json              # Frontend dependencies
-        └── tsconfig.json             # TypeScript configuration
+└── README.md                       # Project Documentation
 ```
 
 ---
