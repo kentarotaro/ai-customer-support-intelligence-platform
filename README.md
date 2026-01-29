@@ -1395,11 +1395,13 @@ When reporting bugs or issues:
 
 ## License
 
-This project is developed for educational purposes as part of the AI Customer Support Intelligence Platform initiative.
+This project is developed for educational purposes as part of the Google Developer Groups on Campus (GDGoC) AI Customer Support Intelligence Platform initiative.
 
-**License Type**: MIT License (or specify your chosen license)
+**License Type**: MIT License
 
-**Copyright**: 2024 AI Customer Support Intelligence Team
+**Copyright**: © 2026 Aulia Kemal Syah & Muhammad Arifudin Yazid Ata
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.
 
 For commercial use or custom licensing inquiries, please contact the project maintainers.
 
