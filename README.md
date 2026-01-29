@@ -444,7 +444,7 @@ Retrieves all customer messages for the inbox view.
       "customer_email": "budi.santoso@email.com",
       "subject": "Balance not credited",
       "preview": "I topped up 50k but...",
-      "timestamp": "2024-01-04T09:30:00Z",
+      "timestamp": "2026-01-04T09:30:00Z",
       "status": "open",
       "category": "Billing",
       "sentiment": "Negative",
@@ -487,12 +487,12 @@ Retrieves full message details including conversation history and AI analysis.
         "id": 1,
         "sender": "customer",
         "content": "I topped up 50k but my balance still shows 0",
-        "timestamp": "2024-01-04T09:30:00Z"
+        "timestamp": "2026-01-04T09:30:00Z"
       }
     ],
     "assigned_to": null,
-    "created_at": "2024-01-04T09:30:00Z",
-    "updated_at": "2024-01-04T09:30:00Z"
+    "created_at": "2026-01-04T09:30:00Z",
+    "updated_at": "2026-01-04T09:30:00Z"
   }
 }
 ```
@@ -564,7 +564,7 @@ Creates a new customer message (used for simulation or API integration).
     "customer_name": "Rara Sekar",
     "subject": "Internet Connection Down",
     "status": "open",
-    "created_at": "2024-01-10T10:15:00Z"
+    "created_at": "2026-01-10T10:15:00Z"
   }
 }
 ```
@@ -592,7 +592,7 @@ Sends agent reply and updates ticket status.
   "data": {
     "id": 25,
     "status": "closed",
-    "replied_at": "2024-01-10T11:00:00Z"
+    "replied_at": "2026-01-10T11:00:00Z"
   }
 }
 ```
@@ -637,7 +637,7 @@ Manually updates ticket status without sending a reply.
   "data": {
     "id": 25,
     "status": "in_progress",
-    "updated_at": "2024-01-10T11:30:00Z"
+    "updated_at": "2026-01-10T11:30:00Z"
   }
 }
 ```
@@ -698,7 +698,7 @@ Authorization: Bearer <jwt-token-lead>
       }
     ]
   },
-  "generated_at": "2024-01-10T12:00:00Z"
+  "generated_at": "2026-01-10T12:00:00Z"
 }
 ```
 
