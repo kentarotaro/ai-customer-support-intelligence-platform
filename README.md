@@ -1439,4 +1439,4 @@ Built with modern technologies:
 **Maintained By**: 
 
 * **Aulia Kemal Syah** - Backend Engineer & System Architect
-* **[Nama Lengkap Yazid]** - Frontend Engineer & UI/UX Designer
+* **Muhammad Arifudin Yazid Ata** - Frontend Engineer & UI/UX Designer
