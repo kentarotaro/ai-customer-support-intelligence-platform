@@ -52,7 +52,7 @@ The AI Customer Support Intelligence Platform is a full-stack application design
 - **Web Framework**: Express.js
 - **Database**: Supabase (PostgreSQL Database-as-a-Service)
 - **Artificial Intelligence**: Google Gemini AI (via Google Generative AI SDK)
-- **Authentication**: JWT (JSON Web Tokens)
+- **Authentication**: JWT (JSON Bearer Tokens)
 - **Environment Management**: Dotenv
 - **Development Tools**: Nodemon
 
@@ -870,7 +870,7 @@ interface MessageListProps {
 - Search functionality
 - Status and priority filtering
 - Sort options (newest, oldest, priority)
-- Infinite scroll support (if implemented)
+- Infinite scroll support 
 - Empty state handling
 
 #### MessageDetail Component
@@ -1182,7 +1182,7 @@ The application uses React's built-in state management patterns:
 ### Global State (Context API)
 
 - **Theme State**: Managed via ThemeContext for application-wide theme switching
-- **Authentication State**: User login status and JWT token (if implemented)
+- **Authentication State**: User login status and JWT token 
 
 ### Page-Level State (useState)
 
@@ -1276,7 +1276,6 @@ The application uses Tailwind CSS responsive utilities:
 - **Multi-Level Filtering**: Filter by status, priority, category, sentiment
 - **Sorting Options**: Sort by newest, oldest, priority, or custom criteria
 - **Read/Unread Status**: Visual indicators for message read status
-- **Bulk Actions**: Select multiple messages for batch operations (if implemented)
 
 ### Ticket Workflow
 
@@ -1293,7 +1292,6 @@ The application uses Tailwind CSS responsive utilities:
 - **Loading States**: Clear indicators during API calls
 - **Error Handling**: User-friendly error messages with recovery options
 - **Offline Support**: Fallback to mock data when backend is unavailable
-- **Keyboard Shortcuts**: Efficient navigation for power users (if implemented)
 
 ### Developer Experience
 
@@ -1315,7 +1313,6 @@ The frontend includes comprehensive fallback mock data that automatically activa
 - Demo mode for presentations
 - Resilient user experience during backend maintenance
 
-**Mock Data Location**: `src/lib/mockData.ts` (if implemented)
 
 ### Error Handling Strategy
 
@@ -1333,7 +1330,7 @@ The application implements multiple layers of error handling:
 - **Code Splitting**: Separate bundles for different routes
 - **Memoization**: React.memo for expensive components
 - **Debounced Search**: Search input with debounce to reduce API calls
-- **Pagination**: Large message lists loaded in chunks (if implemented)
+- **Pagination**: Large message lists loaded in chunks 
 - **Caching**: API response caching to reduce redundant requests
 
 ### Development Workflow
@@ -1430,13 +1427,16 @@ For questions, bug reports, or feature requests:
 Built with modern technologies:
 - **Backend**: Node.js, Express.js, Supabase, Google Gemini AI
 - **Frontend**: Next.js, React, TypeScript, Tailwind CSS
-- **Authentication**: JWT (JSON Web Tokens)
+- **Authentication**: JWT (JSON Bearer Tokens)
 - **Database**: PostgreSQL via Supabase
 
 ---
 
 **Project Version**: 1.0.0
 
-**Last Updated**: January 2024
+**Last Updated**: January 2026
 
-**Maintained By**: AI Customer Support Intelligence Development Team
+**Maintained By**: 
+
+* **Aulia Kemal Syah** - Backend Engineer & System Architect
+* **[Nama Lengkap Yazid]** - Frontend Engineer & UI/UX Designer
